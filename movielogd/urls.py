@@ -1,8 +1,7 @@
-from django.urls import path
-from backend_api import views
+from django.contrib import admin
+from django.urls import path, include
 
 urlpatterns = [
-    path('hello/', views.hello_world, name='hello_world'),
-    path('test/', views.api_test, name='api_test'),
-    path('health/', views.health_check, name='health_check'),
+    path('admin/', admin.site.urls),
+    path('api/', include('backend_api.urls')),
 ]
