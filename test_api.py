@@ -213,7 +213,7 @@ def main():
         test_movie_stats()
         
         # Test deleting a movie (delete the last one)
-        if len(created_movies) > 1:
+        if len(created_movies) > 0:
             test_delete_movie(created_movies[-1]['id'])
         
         print("\n" + "=" * 50)

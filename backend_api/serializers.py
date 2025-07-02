@@ -165,15 +165,48 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
         self._set_m2m(instance, "videos", validated_data.pop("video_ids", None))
 
     def create(self, validated_data):
-        self._handle_m2m(None, validated_data)   # strip helper keys first
+        # Pop the relational IDs from validated_data. They will be handled separately.
+        genre_ids = validated_data.pop("genre_ids", None)
+        spoken_language_codes = validated_data.pop("spoken_language_codes", None)
+        origin_country_codes = validated_data.pop("origin_country_codes", None)
+        production_company_ids = validated_data.pop("production_company_ids", None)
+        production_country_codes = validated_data.pop("production_country_codes", None)
+        video_ids = validated_data.pop("video_ids", None)
+
+        # Create the movie instance with only scalar data
         movie = Movie.objects.create(**validated_data)
-        self._handle_m2m(movie, self.initial_data)
+
+        # Now, set the many-to-many relationships on the created instance
+        self._set_m2m(movie, "genres", genre_ids)
+        self._set_m2m(movie, "spoken_languages", spoken_language_codes)
+        self._set_m2m(movie, "origin_countries", origin_country_codes)
+        self._set_m2m(movie, "production_companies", production_company_ids)
+        self._set_m2m(movie, "production_countries", production_country_codes)
+        self._set_m2m(movie, "videos", video_ids)
+
         return movie
 
     def update(self, instance, validated_data):
-        self._handle_m2m(instance, validated_data)
+        # Handle m2m relations first by popping them from validated_data
+        # This uses the same logic as the create method.
+        genre_ids = validated_data.pop("genre_ids", None)
+        spoken_language_codes = validated_data.pop("spoken_language_codes", None)
+        origin_country_codes = validated_data.pop("origin_country_codes", None)
+        production_company_ids = validated_data.pop("production_company_ids", None)
+        production_country_codes = validated_data.pop("production_country_codes", None)
+        video_ids = validated_data.pop("video_ids", None)
+
+        # Update scalar fields on the instance
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        self._handle_m2m(instance, self.initial_data)
+
+        # Update the many-to-many relationships
+        self._set_m2m(instance, "genres", genre_ids)
+        self._set_m2m(instance, "spoken_languages", spoken_language_codes)
+        self._set_m2m(instance, "origin_countries", origin_country_codes)
+        self._set_m2m(instance, "production_companies", production_company_ids)
+        self._set_m2m(instance, "production_countries", production_country_codes)
+        self._set_m2m(instance, "videos", video_ids)
+
         return instance
