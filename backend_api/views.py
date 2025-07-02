@@ -1,15 +1,24 @@
 from django.db.models import Q, Count, Avg, Max, Min
 from django.shortcuts import get_object_or_404
-from rest_framework import status
+from rest_framework import status, filters
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.generics import ListAPIView
 
-from .models import Movie, Genre
+from .models import (
+    Movie,
+    Genre,
+    ProductionCompany,
+    SpokenLanguage,
+)
 from .serializers import (
     MovieSerializer,
     MovieListSerializer,
     MovieCreateUpdateSerializer,
+    GenreSerializer,
+    ProductionCompanySerializer,
+    SpokenLanguageSerializer,
 )
 
 
@@ -152,3 +161,35 @@ class MovieStatsAPIView(APIView):
         ]
 
         return Response(stats)
+    
+# ───────────────────  Lookup / Reference Endpoints  ───────────────────
+
+class GenreListAPIView(ListAPIView):
+    """
+    GET – list all genres.
+    """
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    pagination_class = MoviePagination  # Use None for disabling pagination
+
+
+class ProductionCompanyListAPIView(ListAPIView):
+    """
+    GET – list all production companies.
+    Supports search by name, e.g., /api/companies/?search=Warner
+    """
+    queryset = ProductionCompany.objects.all()
+    serializer_class = ProductionCompanySerializer
+    # Add search capability for the 'name' field
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    pagination_class = MoviePagination # Use None for disabling pagination
+
+
+class SpokenLanguageListAPIView(ListAPIView):
+    """
+    GET – list all spoken languages.
+    """
+    queryset = SpokenLanguage.objects.all()
+    serializer_class = SpokenLanguageSerializer
+    pagination_class = MoviePagination # Use None for disabling pagination
