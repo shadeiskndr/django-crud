@@ -5,6 +5,7 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
+      - ./seed/movies.db:/app/seed/movies.db 
     environment:
       - DB_NAME=movielogd
       - DB_USER=postgres
@@ -16,15 +17,14 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        echo 'Waiting for PostgreSQL to be ready...' &&
-        while ! nc -z db 5432; do
-          echo 'PostgreSQL is unavailable - sleeping'
-          sleep 1
-        done &&
-        echo 'PostgreSQL is up - executing command' &&
-        python manage.py migrate &&
+        echo 'Waiting for PostgreSQL...' &&
+        while ! nc -z db 5432; do sleep 1; done &&
+        python manage.py makemigrations --noinput &&
+        python manage.py migrate --noinput &&
+        python manage.py import_movies_from_sqlite seed/movies.db &&
         python manage.py runserver 0.0.0.0:8000
       "
+
 
   db:
     image: postgres:15-alpine

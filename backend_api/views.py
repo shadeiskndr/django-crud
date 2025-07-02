@@ -1,167 +1,154 @@
+from django.db.models import Q, Count, Avg, Max, Min
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
-from django.shortcuts import get_object_or_404
-from django.db.models import Q
-from .models import Movie
-from .serializers import MovieSerializer, MovieListSerializer, MovieCreateUpdateSerializer
 
+from .models import Movie, Genre
+from .serializers import (
+    MovieSerializer,
+    MovieListSerializer,
+    MovieCreateUpdateSerializer,
+)
+
+
+# ───────────────────  Pagination  ───────────────────
 class MoviePagination(PageNumberPagination):
     page_size = 20
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
+
+# ───────────────────  List / Create  ───────────────────
 class MovieListCreateAPIView(APIView):
     """
-    GET: List all movies with pagination and search
-    POST: Create a new movie
+    GET – list movies with search / filter / ordering
+    POST – create a movie (see serializer for payload)
     """
-    
+
     def get(self, request):
-        # Get query parameters
-        search = request.query_params.get('search', '')
-        genre = request.query_params.get('genre', '')
-        year = request.query_params.get('year', '')
-        min_rating = request.query_params.get('min_rating', '')
-        ordering = request.query_params.get('ordering', '-created_at')
-        
-        # Start with all movies
+        search = request.query_params.get("search", "")
+        genre = request.query_params.get("genre", "")
+        year = request.query_params.get("year", "")
+        min_rating = request.query_params.get("min_rating", "")
+        ordering = request.query_params.get("ordering", "-created_at")
+
         queryset = Movie.objects.all()
-        
-        # Apply filters
+
+        # Search
         if search:
             queryset = queryset.filter(
-                Q(title__icontains=search) | 
-                Q(original_title__icontains=search) |
-                Q(overview__icontains=search)
+                Q(title__icontains=search)
+                | Q(original_title__icontains=search)
+                | Q(overview__icontains=search)
             )
-        
+
+        # Filter by genre name (related)
         if genre:
-            queryset = queryset.filter(genres_names__icontains=genre)
-            
-        if year:
-            try:
-                queryset = queryset.filter(release_date__year=int(year))
-            except ValueError:
-                pass
-                
+            queryset = queryset.filter(genres__name__icontains=genre)
+
+        # Release year
+        if year and year.isdigit():
+            queryset = queryset.filter(release_date__year=int(year))
+
+        # Min rating
         if min_rating:
             try:
                 queryset = queryset.filter(vote_average__gte=float(min_rating))
             except ValueError:
                 pass
-        
-        # Apply ordering
+
+        # Ordering
         valid_orderings = [
-            'title', '-title', 'release_date', '-release_date',
-            'vote_average', '-vote_average', 'popularity', '-popularity',
-            'created_at', '-created_at'
+            "title",
+            "-title",
+            "release_date",
+            "-release_date",
+            "vote_average",
+            "-vote_average",
+            "popularity",
+            "-popularity",
+            "created_at",
+            "-created_at",
         ]
         if ordering in valid_orderings:
             queryset = queryset.order_by(ordering)
-        
-        # Paginate results
+
+        # Pagination
         paginator = MoviePagination()
-        paginated_queryset = paginator.paginate_queryset(queryset, request)
-        
-        # Serialize data
-        serializer = MovieListSerializer(paginated_queryset, many=True)
-        
+        page = paginator.paginate_queryset(queryset, request)
+        serializer = MovieListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
-    
+
     def post(self, request):
         serializer = MovieCreateUpdateSerializer(data=request.data)
         if serializer.is_valid():
             movie = serializer.save()
-            response_serializer = MovieSerializer(movie)
-            return Response(
-                response_serializer.data, 
-                status=status.HTTP_201_CREATED
-            )
-        return Response(
-            serializer.errors, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
+            return Response(MovieSerializer(movie).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+# ───────────────────  Detail / Update / Delete  ───────────────────
 class MovieDetailAPIView(APIView):
     """
-    GET: Retrieve a specific movie
-    PUT: Update a specific movie (full update)
-    PATCH: Partially update a specific movie
-    DELETE: Delete a specific movie
+    CRUD actions on a single movie
     """
-    
+
     def get_object(self, pk):
         return get_object_or_404(Movie, pk=pk)
-    
+
     def get(self, request, pk):
-        movie = self.get_object(pk)
-        serializer = MovieSerializer(movie)
+        serializer = MovieSerializer(self.get_object(pk))
         return Response(serializer.data)
-    
+
     def put(self, request, pk):
         movie = self.get_object(pk)
         serializer = MovieCreateUpdateSerializer(movie, data=request.data)
         if serializer.is_valid():
-            updated_movie = serializer.save()
-            response_serializer = MovieSerializer(updated_movie)
-            return Response(response_serializer.data)
-        return Response(
-            serializer.errors, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
+            serializer.save()
+            return Response(MovieSerializer(movie).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def patch(self, request, pk):
         movie = self.get_object(pk)
         serializer = MovieCreateUpdateSerializer(
-            movie, 
-            data=request.data, 
-            partial=True
+            movie, data=request.data, partial=True
         )
         if serializer.is_valid():
-            updated_movie = serializer.save()
-            response_serializer = MovieSerializer(updated_movie)
-            return Response(response_serializer.data)
-        return Response(
-            serializer.errors, 
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
+            serializer.save()
+            return Response(MovieSerializer(movie).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def delete(self, request, pk):
-        movie = self.get_object(pk)
-        movie.delete()
+        self.get_object(pk).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+# ───────────────────  Statistics  ───────────────────
 class MovieStatsAPIView(APIView):
     """
-    GET: Get statistics about movies in the database
+    Aggregated statistics over the movie catalogue.
     """
-    
+
     def get(self, request):
-        from django.db.models import Count, Avg, Max, Min
-        
         stats = Movie.objects.aggregate(
-            total_movies=Count('id'),
-            avg_rating=Avg('vote_average'),
-            highest_rating=Max('vote_average'),
-            lowest_rating=Min('vote_average'),
-            avg_runtime=Avg('runtime'),
-            latest_release=Max('release_date'),
-            earliest_release=Min('release_date')
+            total_movies=Count("id"),
+            avg_rating=Avg("vote_average"),
+            highest_rating=Max("vote_average"),
+            lowest_rating=Min("vote_average"),
+            avg_runtime=Avg("runtime"),
+            latest_release=Max("release_date"),
+            earliest_release=Min("release_date"),
         )
-        
-        # Get top genres
-        movies_with_genres = Movie.objects.exclude(genres_names='')
-        genre_counts = {}
-        for movie in movies_with_genres:
-            if movie.genres_names:
-                genres = [g.strip() for g in movie.genres_names.split(',')]
-                for genre in genres:
-                    genre_counts[genre] = genre_counts.get(genre, 0) + 1
-        
-        top_genres = sorted(genre_counts.items(), key=lambda x: x[1], reverse=True)[:10]
-        
-        stats['top_genres'] = [{'genre': genre, 'count': count} for genre, count in top_genres]
-        
+
+        # Top 10 genres
+        top_genres_qs = (
+            Genre.objects.annotate(count=Count("movies"))
+            .order_by("-count")[:10]
+        )
+        stats["top_genres"] = [
+            {"genre": g.name, "count": g.count} for g in top_genres_qs
+        ]
+
         return Response(stats)

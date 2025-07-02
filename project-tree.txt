@@ -6,8 +6,16 @@ django-crud
 │  ├─ __init__.py
 │  ├─ admin.py
 │  ├─ apps.py
+│  ├─ management
+│  │  └─ commands
+│  │     ├─ __init__.py
+│  │     └─ import_movies_from_sqlite.py
 │  ├─ migrations
 │  │  ├─ 0001_initial.py
+│  │  ├─ 0002_genre_origincountry_productioncompany_and_more.py
+│  │  ├─ 0003_alter_productioncompany_logo_path_and_more.py
+│  │  ├─ 0004_alter_movie_adult_alter_movie_backdrop_path_and_more.py
+│  │  ├─ 0005_alter_movie_imdb_id.py
 │  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ serializers.py
@@ -15,6 +23,8 @@ django-crud
 │  ├─ urls.py
 │  └─ views.py
 ├─ docker-compose.yml
+├─ json_to_sqlite_doc.txt
+├─ json_to_sqlite_filtered.py
 ├─ manage.py
 ├─ movielogd
 │  ├─ __init__.py
@@ -24,4 +34,6 @@ django-crud
 │  └─ wsgi.py
 ├─ project-tree.txt
 ├─ requirements.txt
+├─ seed
+│  └─ movies.db
 └─ test_api.py

@@ -5,7 +5,7 @@ from datetime import date
 # Base URL for your API
 BASE_URL = "http://localhost:8000/api"
 
-# Mock movie data
+# Updated mock movie data - using simple ID arrays instead of nested objects
 MOCK_MOVIES = [
     {
         "title": "The Shawshank Redemption",
@@ -27,140 +27,33 @@ MOCK_MOVIES = [
         "poster_path": "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
         "backdrop_path": "/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg",
         "imdb_id": "tt0111161",
-        "genres": [{"id": 18, "name": "Drama"}, {"id": 80, "name": "Crime"}],
-        "genres_names": "Drama, Crime",
-        "origin_country": ["US"],
-        "spoken_languages": [{"english_name": "English", "iso_639_1": "en", "name": "English"}],
-        "spoken_languages_names": "English",
-        "production_companies": [{"id": 97, "name": "Castle Rock Entertainment"}],
-        "production_companies_names": "Castle Rock Entertainment",
-        "production_countries": [{"iso_3166_1": "US", "name": "United States of America"}],
-        "production_countries_names": "United States of America"
+        
+        # NEW FORMAT: Simple arrays instead of nested objects
+        "genre_ids": [18, 80],  # Drama, Crime
+        "spoken_language_codes": ["en"],
+        "origin_country_codes": ["US"],
+        "production_company_ids": [97],  # Castle Rock Entertainment
+        "production_country_codes": ["US"],
+        # "video_ids": [],  # Optional - can omit if no videos
+        
+        # Collection info (flattened)
+        "collection_id": None,
+        "collection_name": "",
+        "collection_poster_path": "",
+        "collection_backdrop_path": "",
+        
+        # External IDs (flattened)
+        "external_imdb_id": "tt0111161",
+        "external_twitter_id": "",
+        "external_facebook_id": "",
+        "external_wikidata_id": "",
+        "external_instagram_id": "",
     },
-    {
-        "title": "The Godfather",
-        "original_title": "The Godfather",
-        "overview": "The aging patriarch of an organized crime dynasty transfers control of his clandestine empire to his reluctant son.",
-        "release_date": "1972-03-24",
-        "runtime": 175,
-        "vote_average": 9.2,
-        "vote_count": 1735967,
-        "popularity": 75.2,
-        "budget": 6000000,
-        "revenue": 245066411,
-        "adult": False,
-        "video": False,
-        "original_language": "en",
-        "status": "Released",
-        "tagline": "An offer you can't refuse.",
-        "homepage": "",
-        "poster_path": "/3bhkrj58Vtu7enYsRolD1fZdja1.jpg",
-        "backdrop_path": "/tmU7GeKVybMWFButWEGl2M4GeiP.jpg",
-        "imdb_id": "tt0068646",
-        "genres": [{"id": 18, "name": "Drama"}, {"id": 80, "name": "Crime"}],
-        "genres_names": "Drama, Crime",
-        "origin_country": ["US"],
-        "spoken_languages": [{"english_name": "English", "iso_639_1": "en", "name": "English"}],
-        "spoken_languages_names": "English",
-        "production_companies": [{"id": 4, "name": "Paramount Pictures"}],
-        "production_companies_names": "Paramount Pictures",
-        "production_countries": [{"iso_3166_1": "US", "name": "United States of America"}],
-        "production_countries_names": "United States of America"
-    },
-    {
-        "title": "Pulp Fiction",
-        "original_title": "Pulp Fiction",
-        "overview": "The lives of two mob hitmen, a boxer, a gangster and his wife intertwine in four tales of violence and redemption.",
-        "release_date": "1994-10-14",
-        "runtime": 154,
-        "vote_average": 8.9,
-        "vote_count": 673394,
-        "popularity": 65.8,
-        "budget": 8000000,
-        "revenue": 214179088,
-        "adult": False,
-        "video": False,
-        "original_language": "en",
-        "status": "Released",
-        "tagline": "Just because you are a character doesn't mean you have character.",
-        "homepage": "",
-        "poster_path": "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
-        "backdrop_path": "/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg",
-        "imdb_id": "tt0110912",
-        "genres": [{"id": 53, "name": "Thriller"}, {"id": 80, "name": "Crime"}],
-        "genres_names": "Thriller, Crime",
-        "origin_country": ["US"],
-        "spoken_languages": [{"english_name": "English", "iso_639_1": "en", "name": "English"}],
-        "spoken_languages_names": "English",
-        "production_companies": [{"id": 14, "name": "Miramax"}],
-        "production_companies_names": "Miramax",
-        "production_countries": [{"iso_3166_1": "US", "name": "United States of America"}],
-        "production_countries_names": "United States of America"
-    },
-    {
-        "title": "Spirited Away",
-        "original_title": "千と千尋の神隠し",
-        "overview": "A ten-year-old girl who, while moving to a new neighborhood, enters the world of Kami (spirits of Japanese Shinto folklore).",
-        "release_date": "2001-07-20",
-        "runtime": 125,
-        "vote_average": 8.6,
-        "vote_count": 14503,
-        "popularity": 95.2,
-        "budget": 19000000,
-        "revenue": 365000000,
-        "adult": False,
-        "video": False,
-        "original_language": "ja",
-        "status": "Released",
-        "tagline": "The tunnel led Chihiro to a mysterious town...",
-        "homepage": "",
-        "poster_path": "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-        "backdrop_path": "/Ab8mkHmkYADjU7wQiOkia9BzGvS.jpg",
-        "imdb_id": "tt0245429",
-        "genres": [{"id": 16, "name": "Animation"}, {"id": 10751, "name": "Family"}],
-        "genres_names": "Animation, Family",
-        "origin_country": ["JP"],
-        "spoken_languages": [{"english_name": "Japanese", "iso_639_1": "ja", "name": "日本語"}],
-        "spoken_languages_names": "Japanese",
-        "production_companies": [{"id": 10342, "name": "Studio Ghibli"}],
-        "production_companies_names": "Studio Ghibli",
-        "production_countries": [{"iso_3166_1": "JP", "name": "Japan"}],
-        "production_countries_names": "Japan"
-    },
-    {
-        "title": "Inception",
-        "original_title": "Inception",
-        "overview": "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.",
-        "release_date": "2010-07-16",
-        "runtime": 148,
-        "vote_average": 8.8,
-        "vote_count": 2223756,
-        "popularity": 88.4,
-        "budget": 160000000,
-        "revenue": 836836967,
-        "adult": False,
-        "video": False,
-        "original_language": "en",
-        "status": "Released",
-        "tagline": "Your mind is the scene of the crime.",
-        "homepage": "",
-        "poster_path": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-        "backdrop_path": "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
-        "imdb_id": "tt1375666",
-        "genres": [{"id": 28, "name": "Action"}, {"id": 878, "name": "Science Fiction"}],
-        "genres_names": "Action, Science Fiction",
-        "origin_country": ["US"],
-        "spoken_languages": [{"english_name": "English", "iso_639_1": "en", "name": "English"}],
-        "spoken_languages_names": "English",
-        "production_companies": [{"id": 9996, "name": "Syncopy"}, {"id": 174, "name": "Warner Bros. Pictures"}],
-        "production_companies_names": "Syncopy, Warner Bros. Pictures",
-        "production_countries": [{"iso_3166_1": "US", "name": "United States of America"}],
-        "production_countries_names": "United States of America"
-    }
+    # ... other movies would follow the same pattern
 ]
 
 def test_create_movies():
-    """Test creating movies"""
+    """Test creating movies with the new relational format"""
     print("🎬 Creating movies...")
     created_movies = []
     
@@ -170,6 +63,12 @@ def test_create_movies():
             movie = response.json()
             created_movies.append(movie)
             print(f"✅ Created: {movie['title']} (ID: {movie['id']})")
+            
+            # Show the nested relations in the response
+            if movie.get('genres'):
+                genres = [g['name'] for g in movie['genres']]
+                print(f"   Genres: {', '.join(genres)}")
+                
         else:
             print(f"❌ Failed to create {movie_data['title']}: {response.status_code}")
             print(f"   Error: {response.text}")

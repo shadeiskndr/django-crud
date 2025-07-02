@@ -10,3 +10,4 @@ __pycache__/
 *.pyd
 .Python
 db.sqlite3
+seed/movies.db
