@@ -32,14 +32,20 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 # Application definition
 
 INSTALLED_APPS = [
+    # Django apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party apps
     'rest_framework',
+
+    # Local apps
     'backend_api',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +144,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
 }
+
+AUTH_USER_MODEL = 'users.CustomUser'
+

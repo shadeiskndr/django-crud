@@ -11,6 +11,9 @@ from .models import (
     Genre,
     ProductionCompany,
     SpokenLanguage,
+    OriginCountry,
+    ProductionCountry,
+    Video
 )
 from .serializers import (
     MovieSerializer,
@@ -19,8 +22,10 @@ from .serializers import (
     GenreSerializer,
     ProductionCompanySerializer,
     SpokenLanguageSerializer,
+    OriginCountrySerializer,
+    ProductionCountrySerializer,
+    VideoSerializer,
 )
-
 
 # ───────────────────  Pagination  ───────────────────
 class MoviePagination(PageNumberPagination):
@@ -193,3 +198,30 @@ class SpokenLanguageListAPIView(ListAPIView):
     queryset = SpokenLanguage.objects.all()
     serializer_class = SpokenLanguageSerializer
     pagination_class = MoviePagination # Use None for disabling pagination
+
+class OriginCountryListAPIView(ListAPIView):
+    """
+    GET – list all origin countries ISO.
+    """
+    queryset = OriginCountry.objects.all()
+    serializer_class = OriginCountrySerializer
+    pagination_class = MoviePagination # Use None for disabling pagination
+
+
+class ProductionCountryListAPIView(ListAPIView):
+    """
+    GET – list all production countries.
+    """
+    queryset = ProductionCountry.objects.all()
+    serializer_class = ProductionCountrySerializer
+    pagination_class = MoviePagination # Use None for disabling pagination
+
+
+class VideoListAPIView(ListAPIView):
+    """
+    GET – list all videos.
+    """
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    pagination_class = MoviePagination # Use None for disabling pagination
+

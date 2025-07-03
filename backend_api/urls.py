@@ -6,6 +6,9 @@ from .views import (
     GenreListAPIView,
     ProductionCompanyListAPIView,
     SpokenLanguageListAPIView,
+    OriginCountryListAPIView,
+    ProductionCountryListAPIView,
+    VideoListAPIView,
 )
 
 app_name = "backend_api"
@@ -20,4 +23,7 @@ urlpatterns = [
     path("genres/", GenreListAPIView.as_view(), name="genre-list"),
     path("companies/", ProductionCompanyListAPIView.as_view(), name="company-list"),
     path("languages/", SpokenLanguageListAPIView.as_view(), name="language-list"),
+    path("countriesISO/", OriginCountryListAPIView.as_view(), name="country-list-iso"),
+    path("countries/", ProductionCountryListAPIView.as_view(), name="country-list"),
+    path("videos/", VideoListAPIView.as_view(), name="video-list"),
 ]
