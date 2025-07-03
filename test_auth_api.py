@@ -88,19 +88,55 @@ def test_missing_password_registration():
     else:
         print(f"❌ Test failed. Expected status 400, but got {response.status_code}")
 
+def test_login(user_credentials):
+    """Test logging in with valid and invalid credentials."""
+    print("\n🔑 Testing user login...")
+    
+    if not user_credentials:
+        print("   ⏩ Skipping login test: No user credentials provided.")
+        return
+
+    # --- Test 1: Successful Login ---
+    print("   - Testing with correct credentials...")
+    login_payload = {
+        "email": user_credentials['email'],
+        "password": user_credentials['password']
+    }
+    
+    response = requests.post(f"{BASE_URL}/login/", json=login_payload)
+    
+    if response.status_code == 200:
+        tokens = response.json()
+        print("   ✅ Successfully logged in and received tokens.")
+        assert "access" in tokens
+        assert "refresh" in tokens
+    else:
+        print(f"   ❌ Login failed! Expected 200, got {response.status_code}")
+        print(f"      Error: {response.text}")
+
 def main():
     """Run all authentication tests."""
     print("🚀 Starting Authentication API Tests...")
     print("=" * 50)
     
     try:
-        # 1. Test the happy path
-        created_user = test_successful_registration()
+        # 1. Register a user to get credentials
+        user_data = generate_unique_user_data()
+        register_response = requests.post(f"{BASE_URL}/register/", json=user_data)
+        if register_response.status_code != 201:
+            print("❌ Critical failure: Could not register a user to test login.")
+            print(f"   Error: {register_response.text}")
+            return
         
-        # 2. Test duplicate email failure (only if first test passed)
-        test_duplicate_email_registration(created_user)
+        print(f"✅ Successfully registered user: {user_data['email']}")
         
-        # 3. Test missing required field failure
+        # 2. Test login with the new user's credentials
+        test_login(user_data)
+        
+        # 3. Test duplicate email failure (only if first test passed)
+        test_duplicate_email_registration(user_data)
+        
+        # 4. Test missing required field failure
         test_missing_password_registration()
         
         print("\n" + "=" * 50)
