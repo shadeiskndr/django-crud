@@ -37,6 +37,7 @@ django-crud
 ├─ seed
 │  └─ movies.db
 ├─ test_api.py
+├─ test_auth_api.py
 └─ users
    ├─ __init__.py
    ├─ admin.py

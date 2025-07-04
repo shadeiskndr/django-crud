@@ -59,7 +59,7 @@ class MovieVideoInline(admin.TabularInline):
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
     list_display = ("title", "release_date", "vote_average", "popularity", "runtime")
-    list_filter = ("adult", "video", "release_date", "original_language")
+    list_filter = ("video", "release_date", "original_language")
     search_fields = ("title", "original_title", "overview")
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)

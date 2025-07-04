@@ -18,7 +18,6 @@ MOCK_MOVIES = [
         "popularity": 80.5,
         "budget": 25000000,
         "revenue": 16000000,
-        "adult": False,
         "video": False,
         "original_language": "en",
         "status": "Released",

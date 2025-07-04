@@ -82,7 +82,6 @@ class Video(models.Model):
 # ────────────────────────────────────────
 class Movie(models.Model):
     # Basic movie info
-    adult = models.BooleanField(default=False, null=True)
     title = models.TextField()
     original_title = models.TextField()
     video = models.BooleanField(default=False, null=True)

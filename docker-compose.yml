@@ -5,7 +5,9 @@ services:
       - "8000:8000"
     volumes:
       - .:/app
-      - ./seed/movies.db:/app/seed/movies.db 
+      - ./seed/movies.db:/app/seed/movies.db
+    env_file:
+      - .env
     environment:
       - DB_NAME=movielogd
       - DB_USER=postgres
@@ -30,6 +32,8 @@ services:
     image: postgres:15-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
     environment:
       - POSTGRES_DB=movielogd
       - POSTGRES_USER=postgres
@@ -37,7 +41,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d movielogd"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
