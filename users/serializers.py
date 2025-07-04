@@ -3,9 +3,12 @@ from .models import CustomUser
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for the CustomUser model (for reading user data)."""
+    # Make role read-only to prevent users from changing it via a general update endpoint
+    role = serializers.CharField(read_only=True)
+
     class Meta:
         model = CustomUser
-        fields = ('id', 'username', 'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'role')
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -14,10 +17,13 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
+        # We don't include 'role' here as an input field.
+        # It will be set by the model's default value.
         fields = ('username', 'email', 'password', 'first_name', 'last_name')
 
     def create(self, validated_data):
-        # Use the create_user helper on the manager to properly hash the password.
+        # The 'role' will be automatically set to the default 'USER'
+        # by the model when create_user is called.
         user = CustomUser.objects.create_user(
             username=validated_data['username'],
             email=validated_data['email'],

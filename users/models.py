@@ -4,9 +4,19 @@ from django.db import models
 class CustomUser(AbstractUser):
     """
     Extends Django's default User model.
-    You can add more fields here in the future.
     """
+    class Role(models.TextChoices):
+        USER = 'USER', 'User'
+        CRITIC = 'CRITIC', 'Critic'
+        MODERATOR = 'MODERATOR', 'Moderator'
+        ADMIN = 'ADMIN', 'Admin'
+
     email = models.EmailField(unique=True) # Make email the unique identifier
+    role = models.CharField(
+        max_length=50,
+        choices=Role.choices,
+        default=Role.USER
+    )
 
     # Use email for login instead of username
     USERNAME_FIELD = 'email'
