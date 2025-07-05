@@ -97,18 +97,8 @@ class MovieListSerializer(serializers.ModelSerializer):
 class MovieCreateUpdateSerializer(serializers.ModelSerializer):
     """
     Accept scalar movie data *plus* simple id/code arrays for the m2m relations.
-    Example payload fragment:
-        {
-          "title": "…",
-          "genre_ids": [28, 12],
-          "spoken_language_codes": ["en", "fr"],
-          "origin_country_codes": ["US"],
-          "production_company_ids": [174, 33],
-          "production_country_codes": ["US"],
-          "video_ids": ["6400c…"]
-        }
     """
-    # write-only helper fields (all optional)
+    # write-only helper fields
     genre_ids = serializers.ListField(
         child=serializers.IntegerField(), required=False, write_only=True
     )
@@ -134,7 +124,38 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
                    "origin_countries", "production_companies",
                    "production_countries", "videos")
 
-    # ─────  validation helpers  ─────
+    # ─────  NEW: validation helpers for M2M fields  ─────
+    def validate_genre_ids(self, ids):
+        if ids and Genre.objects.filter(pk__in=ids).count() != len(set(ids)):
+            raise serializers.ValidationError("One or more invalid genre IDs found.")
+        return ids
+
+    def validate_spoken_language_codes(self, codes):
+        if codes and SpokenLanguage.objects.filter(pk__in=codes).count() != len(set(codes)):
+            raise serializers.ValidationError("One or more invalid spoken language codes found.")
+        return codes
+
+    def validate_origin_country_codes(self, codes):
+        if codes and OriginCountry.objects.filter(pk__in=codes).count() != len(set(codes)):
+            raise serializers.ValidationError("One or more invalid origin country codes found.")
+        return codes
+
+    def validate_production_company_ids(self, ids):
+        if ids and ProductionCompany.objects.filter(pk__in=ids).count() != len(set(ids)):
+            raise serializers.ValidationError("One or more invalid production company IDs found.")
+        return ids
+
+    def validate_production_country_codes(self, codes):
+        if codes and ProductionCountry.objects.filter(pk__in=codes).count() != len(set(codes)):
+            raise serializers.ValidationError("One or more invalid production country codes found.")
+        return codes
+
+    def validate_video_ids(self, ids):
+        if ids and Video.objects.filter(pk__in=ids).count() != len(set(ids)):
+            raise serializers.ValidationError("One or more invalid video IDs found.")
+        return ids
+
+    # ─────  Scalar validation helpers  ─────
     def validate_vote_average(self, value):
         if value is not None and not (0 <= value <= 10):
             raise serializers.ValidationError("Vote average must be between 0 and 10.")
@@ -151,18 +172,6 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
         if ids is None:
             return
         getattr(instance, attr).set(ids)
-
-    def _handle_m2m(self, instance, validated_data):
-        self._set_m2m(instance, "genres", validated_data.pop("genre_ids", None))
-        self._set_m2m(instance, "spoken_languages",
-                      validated_data.pop("spoken_language_codes", None))
-        self._set_m2m(instance, "origin_countries",
-                      validated_data.pop("origin_country_codes", None))
-        self._set_m2m(instance, "production_companies",
-                      validated_data.pop("production_company_ids", None))
-        self._set_m2m(instance, "production_countries",
-                      validated_data.pop("production_country_codes", None))
-        self._set_m2m(instance, "videos", validated_data.pop("video_ids", None))
 
     def create(self, validated_data):
         # Pop the relational IDs from validated_data. They will be handled separately.
@@ -188,7 +197,6 @@ class MovieCreateUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Handle m2m relations first by popping them from validated_data
-        # This uses the same logic as the create method.
         genre_ids = validated_data.pop("genre_ids", None)
         spoken_language_codes = validated_data.pop("spoken_language_codes", None)
         origin_country_codes = validated_data.pop("origin_country_codes", None)

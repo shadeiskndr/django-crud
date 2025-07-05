@@ -1,7 +1,7 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
-    MovieListCreateAPIView,
-    MovieDetailAPIView,
+    MovieViewSet,
     MovieStatsAPIView,
     GenreListAPIView,
     ProductionCompanyListAPIView,
@@ -13,13 +13,15 @@ from .views import (
 
 app_name = "backend_api"
 
-urlpatterns = [
-    # Movie CRUD and Stats
-    path("movies/", MovieListCreateAPIView.as_view(), name="movie-list-create"),
-    path("movies/<int:pk>/", MovieDetailAPIView.as_view(), name="movie-detail"),
-    path("movies/stats/", MovieStatsAPIView.as_view(), name="movie-stats"),
+router = DefaultRouter()
+router.register(r'movies', MovieViewSet, basename='movie')
 
-    # Lookup Endpoints for Frontend Forms
+urlpatterns = [
+    # Router-generated movie URLs (list, create, retrieve, update, delete)
+    path("", include(router.urls)),
+
+    # Other specific endpoints
+    path("movies/stats/", MovieStatsAPIView.as_view(), name="movie-stats"),
     path("genres/", GenreListAPIView.as_view(), name="genre-list"),
     path("companies/", ProductionCompanyListAPIView.as_view(), name="company-list"),
     path("languages/", SpokenLanguageListAPIView.as_view(), name="language-list"),
