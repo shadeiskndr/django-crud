@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction, models
+from django.db import transaction, models, connection, models as dj_models
 
 from backend_api.models import (
     Genre,
@@ -87,6 +87,55 @@ class Command(BaseCommand):
         n = len(objs)
         objs.clear()
         return n
+
+    @staticmethod
+    def _reset_postgres_sequences(models_: Iterable[models.Model]) -> None:
+        """
+        For every model in *models_*:
+          SELECT setval(pg_get_serial_sequence(...), max(id)+1, false);
+
+        This has no effect on non-PostgreSQL databases; we simply skip them.
+        """
+        # Only PostgreSQL needs manual sequence adjustment
+        if connection.vendor != "postgresql":
+            return
+
+        with connection.cursor() as cursor:
+            for model in models_:
+                table = model._meta.db_table
+                pk_field = model._meta.pk
+
+                # Only integer auto-incrementing PKs (AutoField / BigAutoField / SmallAutoField)
+                # have an associated sequence.  Skip anything else (CharField, UUIDField, …).
+                if not isinstance(
+                    pk_field,
+                    (
+                        dj_models.AutoField,
+                        dj_models.BigAutoField,
+                        dj_models.SmallAutoField,
+                    ),
+                ):
+                    continue
+
+                # Ask PostgreSQL for the sequence that belongs to this column.
+                cursor.execute(
+                    "SELECT pg_get_serial_sequence(%s, %s)", [table, pk_field.column]
+                )
+                seq_name = cursor.fetchone()[0]
+                if seq_name is None:  # Column is not sequence-backed ➜ nothing to reset.
+                    continue
+
+                # Advance the sequence to MAX(id) + 1 so the next INSERT won’t collide.
+                cursor.execute(
+                    f"""
+                    SELECT setval(
+                        %s,
+                        (SELECT COALESCE(MAX({pk_field.column}), 0) FROM {table}) + 1,
+                        false
+                    );
+                    """,
+                    [seq_name],
+                )
 
     # ─────────────────────────────────────────────────────────
     # m2m helpers
@@ -270,6 +319,22 @@ class Command(BaseCommand):
                 "production_countries",
             )
             link("movie_videos", lambda r: (r["movie_id"], r["video_id"]), "videos")
+
+            # -------------------------------------------------
+            # 4. reset PK sequences  (PostgreSQL only)
+            # -------------------------------------------------
+            self.stdout.write("\n→ syncing PostgreSQL ID sequences")
+            self._reset_postgres_sequences(
+                [
+                    Movie,
+                    Genre,
+                    SpokenLanguage,
+                    OriginCountry,
+                    ProductionCompany,
+                    ProductionCountry,
+                    Video,
+                ]
+            )
 
         self.stdout.write(self.style.SUCCESS("\nImport finished."))
 
