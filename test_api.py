@@ -1,228 +1,184 @@
 import requests
 import json
-from datetime import date
+import uuid
+import os
+import django
 
-# Base URL for your API
-BASE_URL = "http://localhost:8000/api"
+# --- Setup Django Environment to access models ---
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'movielogd.settings')
+django.setup()
+from users.models import CustomUser
+from backend_api.models import Genre # <-- Import Genre model
+# --- End Django Setup ---
 
-# Updated mock movie data - using simple ID arrays instead of nested objects
-MOCK_MOVIES = [
-    {
-        "title": "The Shawshank Redemption",
-        "original_title": "The Shawshank Redemption",
-        "overview": "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
-        "release_date": "1994-09-23",
-        "runtime": 142,
-        "vote_average": 9.3,
-        "vote_count": 2343110,
-        "popularity": 80.5,
-        "budget": 25000000,
-        "revenue": 16000000,
-        "video": False,
-        "original_language": "en",
-        "status": "Released",
-        "tagline": "Fear can hold you prisoner. Hope can set you free.",
-        "homepage": "",
-        "poster_path": "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
-        "backdrop_path": "/iNh3BivHyg5sQRPP1KOkzguEX0H.jpg",
-        "imdb_id": "tt0111161",
-        
-        # NEW FORMAT: Simple arrays instead of nested objects
-        "genre_ids": [18, 80],  # Drama, Crime
-        "spoken_language_codes": ["en"],
-        "origin_country_codes": ["US"],
-        "production_company_ids": [97],  # Castle Rock Entertainment
-        "production_country_codes": ["US"],
-        # "video_ids": [],  # Optional - can omit if no videos
-        
-        # Collection info (flattened)
-        "collection_id": None,
-        "collection_name": "",
-        "collection_poster_path": "",
-        "collection_backdrop_path": "",
-        
-        # External IDs (flattened)
-        "external_imdb_id": "tt0111161",
-        "external_twitter_id": "",
-        "external_facebook_id": "",
-        "external_wikidata_id": "",
-        "external_instagram_id": "",
-    },
-    # ... other movies would follow the same pattern
-]
+# Base URLs
+API_BASE_URL = "http://localhost:8000/api"
+AUTH_BASE_URL = "http://localhost:8000/api/auth"
 
-def test_create_movies():
-    """Test creating movies with the new relational format"""
-    print("🎬 Creating movies...")
-    created_movies = []
-    
-    for movie_data in MOCK_MOVIES:
-        response = requests.post(f"{BASE_URL}/movies/", json=movie_data)
-        if response.status_code == 201:
-            movie = response.json()
-            created_movies.append(movie)
-            print(f"✅ Created: {movie['title']} (ID: {movie['id']})")
-            
-            # Show the nested relations in the response
-            if movie.get('genres'):
-                genres = [g['name'] for g in movie['genres']]
-                print(f"   Genres: {', '.join(genres)}")
-                
-        else:
-            print(f"❌ Failed to create {movie_data['title']}: {response.status_code}")
-            print(f"   Error: {response.text}")
-    
-    return created_movies
+# Mock movie data for creation
+MOCK_MOVIE_PAYLOAD = {
+    "title": "The Test Movie",
+    "original_title": "The Test Movie",
+    "overview": "A movie created by an automated test.",
+    "release_date": "2024-01-01",
+    "runtime": 120,
+    "vote_average": 7.5,
+    "genre_ids": [28, 12], # Action, Adventure
+}
 
-def test_list_movies():
-    """Test listing movies"""
-    print("\n📋 Listing all movies...")
-    response = requests.get(f"{BASE_URL}/movies/")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"✅ Found {data['count']} movies")
-        for movie in data['results']:
-            print(f"   - {movie['title']} ({movie['release_date']}) - Rating: {movie['vote_average']}")
-    else:
-        print(f"❌ Failed to list movies: {response.status_code}")
+# --- Helper Functions ---
 
-def test_search_movies():
-    """Test searching movies"""
-    print("\n🔍 Testing search functionality...")
-    
-    # Search by title
-    response = requests.get(f"{BASE_URL}/movies/?search=godfather")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"✅ Search 'godfather': {data['count']} results")
-        for movie in data['results']:
-            print(f"   - {movie['title']}")
-    
-    # Filter by genre
-    response = requests.get(f"{BASE_URL}/movies/?genre=Crime")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"✅ Genre 'Crime': {data['count']} results")
-        for movie in data['results']:
-            print(f"   - {movie['title']}")
-    
-    # Filter by year
-    response = requests.get(f"{BASE_URL}/movies/?year=1994")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"✅ Year '1994': {data['count']} results")
-        for movie in data['results']:
-            print(f"   - {movie['title']}")
-    
-    # Filter by minimum rating
-    response = requests.get(f"{BASE_URL}/movies/?min_rating=9.0")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"✅ Min rating 9.0: {data['count']} results")
-        for movie in data['results']:
-            print(f"   - {movie['title']} ({movie['vote_average']})")
-
-def test_get_movie_detail(movie_id):
-    """Test getting movie details"""
-    print(f"\n🎭 Getting details for movie ID {movie_id}...")
-    response = requests.get(f"{BASE_URL}/movies/{movie_id}/")
-    if response.status_code == 200:
-        movie = response.json()
-        print(f"✅ Retrieved: {movie['title']}")
-        print(f"   Overview: {movie['overview'][:100]}...")
-        print(f"   Runtime: {movie['runtime']} minutes")
-        print(f"   Rating: {movie['vote_average']}/10")
-        return movie
-    else:
-        print(f"❌ Failed to get movie {movie_id}: {response.status_code}")
-        return None
-
-def test_update_movie(movie_id):
-    """Test updating a movie"""
-    print(f"\n✏️ Updating movie ID {movie_id}...")
-    
-    # Partial update (PATCH)
-    update_data = {
-        "tagline": "Updated tagline for testing!",
-        "popularity": 99.9
+def generate_unique_user_data():
+    """Generates user data with a unique email."""
+    unique_id = uuid.uuid4().hex[:8]
+    return {
+        "username": f"api_test_user_{unique_id}",
+        "email": f"api_test_{unique_id}@example.com",
+        "password": "strong-password-123",
     }
+
+def create_test_user(role=CustomUser.Role.USER):
+    """Creates a user directly in the DB with a specific role."""
+    user_data = generate_unique_user_data()
+    CustomUser.objects.create_user(
+        username=user_data['username'],
+        email=user_data['email'],
+        password=user_data['password'],
+        role=role
+    )
+    return user_data
+
+def get_auth_token(user_credentials):
+    """Logs in a user and returns the access token."""
+    response = requests.post(f"{AUTH_BASE_URL}/login/", json=user_credentials)
+    if response.status_code == 200:
+        return response.json()['access']
+    print(f"   ⚠️ Could not log in user {user_credentials['email']}. Response: {response.text}")
+    return None
+
+def setup_test_data():
+    """Creates necessary related objects (like Genres) for tests to pass."""
+    print("🔧 Setting up test data (Genres)...")
+    # The MOCK_MOVIE_PAYLOAD requires genres with IDs 28 and 12.
+    # Use update_or_create to avoid errors on re-runs.
+    Genre.objects.update_or_create(tmdb_id=28, defaults={'name': 'Action'})
+    Genre.objects.update_or_create(tmdb_id=12, defaults={'name': 'Adventure'})
+    print("   ✅ Genres created.")
+
+# --- Test Functions ---
+
+def test_read_operations():
+    """Tests that read operations (list, retrieve) are public."""
+    print("\n📖 Testing Read Operations (Public Access)...")
     
-    response = requests.patch(f"{BASE_URL}/movies/{movie_id}/", json=update_data)
-    if response.status_code == 200:
-        movie = response.json()
-        print(f"✅ Updated: {movie['title']}")
-        print(f"   New tagline: {movie['tagline']}")
-        print(f"   New popularity: {movie['popularity']}")
+    # Test LIST
+    list_response = requests.get(f"{API_BASE_URL}/movies/")
+    if list_response.status_code == 200:
+        print("   ✅ LIST: Public access to /movies/ is allowed (200 OK).")
     else:
-        print(f"❌ Failed to update movie {movie_id}: {response.status_code}")
-        print(f"   Error: {response.text}")
+        print(f"   ❌ LIST: FAILED! Expected 200, got {list_response.status_code}.")
 
-def test_movie_stats():
-    """Test getting movie statistics"""
-    print("\n📊 Getting movie statistics...")
-    response = requests.get(f"{BASE_URL}/movies/stats/")
-    if response.status_code == 200:
-        stats = response.json()
-        print("✅ Statistics:")
-        print(f"   Total movies: {stats['total_movies']}")
-        print(f"   Average rating: {stats['avg_rating']:.2f}")
-        print(f"   Highest rating: {stats['highest_rating']}")
-        print(f"   Average runtime: {stats['avg_runtime']:.1f} minutes")
-        print(f"   Top genres:")
-        for genre_info in stats['top_genres'][:5]:
-            print(f"     - {genre_info['genre']}: {genre_info['count']} movies")
+    # Create a movie with an admin account to test RETRIEVE
+    admin_creds = create_test_user(role=CustomUser.Role.ADMIN)
+    admin_token = get_auth_token(admin_creds)
+    if not admin_token:
+        print("   ❌ CRITICAL: Could not get admin token. Skipping retrieve test.")
+        return
+        
+    headers = {'Authorization': f'Bearer {admin_token}'}
+    create_response = requests.post(f"{API_BASE_URL}/movies/", headers=headers, json=MOCK_MOVIE_PAYLOAD)
+    
+    if create_response.status_code != 201:
+        print(f"   ❌ CRITICAL: Could not create a movie for testing retrieve. Error: {create_response.text}")
+        return
+    
+    movie_id = create_response.json()['id']
+    
+    # Test RETRIEVE (no auth headers)
+    retrieve_response = requests.get(f"{API_BASE_URL}/movies/{movie_id}/")
+    if retrieve_response.status_code == 200:
+        print(f"   ✅ RETRIEVE: Public access to /movies/{movie_id}/ is allowed (200 OK).")
     else:
-        print(f"❌ Failed to get stats: {response.status_code}")
+        print(f"   ❌ RETRIEVE: FAILED! Expected 200, got {retrieve_response.status_code}.")
 
-def test_delete_movie(movie_id):
-    """Test deleting a movie"""
-    print(f"\n🗑️ Deleting movie ID {movie_id}...")
-    response = requests.delete(f"{BASE_URL}/movies/{movie_id}/")
-    if response.status_code == 204:
-        print(f"✅ Successfully deleted movie {movie_id}")
-    else:
-        print(f"❌ Failed to delete movie {movie_id}: {response.status_code}")
+def test_write_operations():
+    """Tests that write operations (POST, PUT, PATCH, DELETE) are restricted."""
+    print("\n✍️  Testing Write Operations (Admin-Only Access)...")
+
+    # Setup users and tokens
+    admin_creds = create_test_user(role=CustomUser.Role.ADMIN)
+    user_creds = create_test_user(role=CustomUser.Role.USER)
+    admin_token = get_auth_token(admin_creds)
+    user_token = get_auth_token(user_creds)
+    
+    if not (admin_token and user_token):
+        print("   ❌ CRITICAL: Could not get auth tokens. Aborting write tests.")
+        return
+
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+
+    # --- Test CREATE (POST) ---
+    print("   - Testing CREATE (POST /movies/)...")
+    # No Auth
+    r_no_auth = requests.post(f"{API_BASE_URL}/movies/", json=MOCK_MOVIE_PAYLOAD)
+    print(f"     - No Auth: {'✅ Correctly denied (401)' if r_no_auth.status_code == 401 else f'❌ FAILED (Expected 401, got {r_no_auth.status_code})'}")
+    # User Auth
+    r_user_auth = requests.post(f"{API_BASE_URL}/movies/", headers=user_headers, json=MOCK_MOVIE_PAYLOAD)
+    print(f"     - User Role: {'✅ Correctly denied (403)' if r_user_auth.status_code == 403 else f'❌ FAILED (Expected 403, got {r_user_auth.status_code})'}")
+    # Admin Auth
+    r_admin_auth = requests.post(f"{API_BASE_URL}/movies/", headers=admin_headers, json=MOCK_MOVIE_PAYLOAD)
+    print(f"     - Admin Role: {'✅ Correctly allowed (201)' if r_admin_auth.status_code == 201 else f'❌ FAILED (Expected 201, got {r_admin_auth.status_code})'}")
+    
+    if r_admin_auth.status_code != 201:
+        print(f"   ❌ CRITICAL: Could not create movie as admin. Aborting further write tests. Error: {r_admin_auth.text}")
+        return
+    
+    movie_id = r_admin_auth.json()['id']
+    update_payload = {"tagline": "This was updated by a test."}
+
+    # --- Test UPDATE (PATCH) ---
+    print(f"   - Testing UPDATE (PATCH /movies/{movie_id}/)...")
+    # No Auth
+    r_no_auth = requests.patch(f"{API_BASE_URL}/movies/{movie_id}/", json=update_payload)
+    print(f"     - No Auth: {'✅ Correctly denied (401)' if r_no_auth.status_code == 401 else f'❌ FAILED (Expected 401, got {r_no_auth.status_code})'}")
+    # User Auth
+    r_user_auth = requests.patch(f"{API_BASE_URL}/movies/{movie_id}/", headers=user_headers, json=update_payload)
+    print(f"     - User Role: {'✅ Correctly denied (403)' if r_user_auth.status_code == 403 else f'❌ FAILED (Expected 403, got {r_user_auth.status_code})'}")
+    # Admin Auth
+    r_admin_auth = requests.patch(f"{API_BASE_URL}/movies/{movie_id}/", headers=admin_headers, json=update_payload)
+    print(f"     - Admin Role: {'✅ Correctly allowed (200)' if r_admin_auth.status_code == 200 else f'❌ FAILED (Expected 200, got {r_admin_auth.status_code})'}")
+
+    # --- Test DELETE ---
+    print(f"   - Testing DELETE (/movies/{movie_id}/)...")
+    # User Auth (try to delete first)
+    r_user_auth = requests.delete(f"{API_BASE_URL}/movies/{movie_id}/", headers=user_headers)
+    print(f"     - User Role: {'✅ Correctly denied (403)' if r_user_auth.status_code == 403 else f'❌ FAILED (Expected 403, got {r_user_auth.status_code})'}")
+    # Admin Auth
+    r_admin_auth = requests.delete(f"{API_BASE_URL}/movies/{movie_id}/", headers=admin_headers)
+    print(f"     - Admin Role: {'✅ Correctly allowed (204)' if r_admin_auth.status_code == 204 else f'❌ FAILED (Expected 204, got {r_admin_auth.status_code})'}")
+    
+    # Verify deletion
+    r_verify = requests.get(f"{API_BASE_URL}/movies/{movie_id}/")
+    print(f"     - Verify Deletion: {'✅ Movie is gone (404)' if r_verify.status_code == 404 else f'❌ FAILED (Expected 404, got {r_verify.status_code})'}")
 
 def main():
-    """Run all tests"""
-    print("🚀 Starting API Tests...")
+    """Run all API tests."""
+    print("🚀 Starting API Security Tests...")
     print("=" * 50)
     
     try:
-        # Test creating movies
-        created_movies = test_create_movies()
-        
-        if not created_movies:
-            print("❌ No movies were created. Stopping tests.")
-            return
-        
-        # Test listing movies
-        test_list_movies()
-        
-        # Test search functionality
-        test_search_movies()
-        
-        # Test getting movie details
-        first_movie = test_get_movie_detail(created_movies[0]['id'])
-        
-        # Test updating a movie
-        test_update_movie(created_movies[0]['id'])
-        
-        # Test movie statistics
-        test_movie_stats()
-        
-        # Test deleting a movie (delete the last one)
-        if len(created_movies) > 0:
-            test_delete_movie(created_movies[-1]['id'])
+        setup_test_data()
+        test_read_operations()
+        test_write_operations()
         
         print("\n" + "=" * 50)
-        print("🎉 All tests completed!")
+        print("🎉 All API security tests completed!")
         
     except requests.exceptions.ConnectionError:
-        print("❌ Could not connect to the API. Make sure your server is running on http://localhost:8000")
+        print("\n❌ Could not connect to the API. Make sure your server is running on http://localhost:8000")
     except Exception as e:
-        print(f"❌ An error occurred: {str(e)}")
+        print(f"\n❌ An unexpected error occurred: {str(e)}")
 
 if __name__ == "__main__":
     main()
-
