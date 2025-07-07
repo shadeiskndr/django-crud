@@ -43,10 +43,12 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_spectacular',
 
     # Local apps
     'backend_api',
     'users',
+    'catalog',
 ]
 
 MIDDLEWARE = [
@@ -154,5 +156,44 @@ AUTH_USER_MODEL = 'users.CustomUser'
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Movielogd API',
+    'DESCRIPTION': 'A comprehensive movie database CRUD API with user authentication, personal catalogs, and movie lists',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': '/api/',
+    
+    # Authentication settings
+    'AUTHENTICATION_WHITELIST': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    
+    # Custom settings
+    'CONTACT': {
+        'name': 'Movielogd API Support',
+        'email': 'support@movielogd.com',
+    },
+    'LICENSE': {
+        'name': 'MIT License',
+    },
+    
+    # Swagger UI settings
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+        'filter': True,
+    },
+    
+    # ReDoc settings
+    'REDOC_UI_SETTINGS': {
+        'hideDownloadButton': False,
+        'expandResponses': 'all',
+        'pathInMiddlePanel': True,
+    },
 }
 

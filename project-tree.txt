@@ -16,8 +16,23 @@ django-crud
 │  │  ├─ 0003_alter_productioncompany_logo_path_and_more.py
 │  │  ├─ 0004_alter_movie_adult_alter_movie_backdrop_path_and_more.py
 │  │  ├─ 0005_alter_movie_imdb_id.py
+│  │  ├─ 0006_remove_movie_adult.py
 │  │  └─ __init__.py
 │  ├─ models.py
+│  ├─ permissions.py
+│  ├─ serializers.py
+│  ├─ tests.py
+│  ├─ urls.py
+│  └─ views.py
+├─ catalog
+│  ├─ __init__.py
+│  ├─ admin.py
+│  ├─ apps.py
+│  ├─ migrations
+│  │  ├─ 0001_initial.py
+│  │  └─ __init__.py
+│  ├─ models.py
+│  ├─ permissions.py
 │  ├─ serializers.py
 │  ├─ tests.py
 │  ├─ urls.py
@@ -38,14 +53,17 @@ django-crud
 │  └─ movies.db
 ├─ test_api.py
 ├─ test_auth_api.py
+├─ test_catalog_api.py
 └─ users
    ├─ __init__.py
    ├─ admin.py
    ├─ apps.py
    ├─ migrations
    │  ├─ 0001_initial.py
+   │  ├─ 0002_customuser_role.py
    │  └─ __init__.py
    ├─ models.py
+   ├─ permissions.py
    ├─ serializers.py
    ├─ tests.py
    ├─ urls.py
