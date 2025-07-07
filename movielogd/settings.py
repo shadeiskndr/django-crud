@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'backend_api',
     'users',
     'catalog',
+    'reviews',
 ]
 
 MIDDLEWARE = [

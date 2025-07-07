@@ -49,11 +49,26 @@ django-crud
 │  └─ wsgi.py
 ├─ project-tree.txt
 ├─ requirements.txt
+├─ reviews
+│  ├─ __init__.py
+│  ├─ admin.py
+│  ├─ apps.py
+│  ├─ migrations
+│  │  ├─ 0001_initial.py
+│  │  ├─ 0002_alter_reviewreport_options.py
+│  │  └─ __init__.py
+│  ├─ models.py
+│  ├─ permissions.py
+│  ├─ serializers.py
+│  ├─ tests.py
+│  ├─ urls.py
+│  └─ views.py
 ├─ seed
 │  └─ movies.db
 ├─ test_api.py
 ├─ test_auth_api.py
 ├─ test_catalog_api.py
+├─ test_reviews_api.py
 └─ users
    ├─ __init__.py
    ├─ admin.py
