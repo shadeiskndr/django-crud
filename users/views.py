@@ -5,7 +5,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import RegisterSerializer, UserSerializer
 from .models import CustomUser
-# Import our new permissions
 from .permissions import IsAdmin
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -41,7 +40,6 @@ class RegisterView(generics.CreateAPIView):
             "message": "User created successfully. You can now log in."
         }, status=status.HTTP_201_CREATED)
 
-# --- Example of a protected view ---
 class UserListView(generics.ListAPIView):
     """
     API endpoint that lists all users.
@@ -50,3 +48,33 @@ class UserListView(generics.ListAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdmin] # Enforce admin role
+
+class UserRoleUpdateView(generics.UpdateAPIView):
+    """
+    API endpoint for admins to update user roles.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsAdmin]
+    
+    def patch(self, request, *args, **kwargs):
+        user = self.get_object()
+        new_role = request.data.get('role')
+        
+        if not new_role:
+            return Response({'error': 'Role field is required'}, status=400)
+        
+        if new_role in [choice[0] for choice in CustomUser.Role.choices]:
+            old_role = user.role
+            user.role = new_role
+            user.save()
+            return Response({
+                'message': f'User role updated from {old_role} to {new_role}',
+                'user': UserSerializer(user).data
+            }, status=200)
+        
+        return Response({
+            'error': 'Invalid role',
+            'valid_roles': [choice[0] for choice in CustomUser.Role.choices]
+        }, status=400)
+

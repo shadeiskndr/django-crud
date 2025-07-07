@@ -127,24 +127,202 @@ def test_protected_endpoint_access():
         else:
             print(f"     ❌ FAILED! Expected 200, got {admin_response.status_code}")
 
+def test_role_update_functionality():
+    """Test the new role update endpoint."""
+    print("\n🔄 Testing Role Update Functionality...")
+    
+    # Create an admin user and a regular user
+    admin_creds = create_test_user(role=CustomUser.Role.ADMIN)
+    user_creds = create_test_user(role=CustomUser.Role.USER)
+    
+    # Get tokens
+    admin_token = test_login_and_token_claims(admin_creds)
+    user_token = test_login_and_token_claims(user_creds)
+    
+    if not (admin_token and user_token):
+        print("   ❌ Could not get required tokens. Skipping role update tests.")
+        return
+    
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    user_headers = {'Authorization': f'Bearer {user_token}'}
+    
+    # First, get the user ID by listing users
+    print("   - Getting user list to find user ID...")
+    users_response = requests.get(f"{BASE_URL}/users/", headers=admin_headers)
+    if users_response.status_code != 200:
+        print(f"   ❌ Could not get users list: {users_response.status_code}")
+        return
+    
+    users_data = users_response.json()
+    results = users_data.get('results', users_data) if isinstance(users_data, dict) else users_data
+    
+    # Find the regular user in the list
+    target_user = None
+    for user in results:
+        if user['email'] == user_creds['email']:
+            target_user = user
+            break
+    
+    if not target_user:
+        print("   ❌ Could not find target user in users list.")
+        return
+    
+    user_id = target_user['id']
+    print(f"   ✅ Found target user ID: {user_id}")
+    
+    # --- Test Case 1: Regular user trying to update roles (should fail) ---
+    print("   - Testing role update by regular user (should fail)...")
+    role_update_payload = {"role": "ADMIN"}
+    response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                            json=role_update_payload, headers=user_headers)
+    if response.status_code == 403:
+        print("     ✅ Correctly denied regular user role update (403 Forbidden)")
+    else:
+        print(f"     ❌ FAILED! Expected 403, got {response.status_code}")
+    
+    # --- Test Case 2: Admin updating user role (should succeed) ---
+    print("   - Testing role update by admin (USER → CRITIC)...")
+    role_update_payload = {"role": "CRITIC"}
+    response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                            json=role_update_payload, headers=admin_headers)
+    if response.status_code == 200:
+        data = response.json()
+        print("     ✅ Successfully updated user role")
+        print(f"     ✅ New role: {data['user']['role']}")
+        assert data['user']['role'] == 'CRITIC'
+    else:
+        print(f"     ❌ FAILED! Expected 200, got {response.status_code}, Error: {response.text}")
+        return
+    
+    # --- Test Case 3: Admin updating user role to ADMIN ---
+    print("   - Testing role update by admin (CRITIC → ADMIN)...")
+    role_update_payload = {"role": "ADMIN"}
+    response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                            json=role_update_payload, headers=admin_headers)
+    if response.status_code == 200:
+        data = response.json()
+        print("     ✅ Successfully updated user role to ADMIN")
+        print(f"     ✅ New role: {data['user']['role']}")
+        assert data['user']['role'] == 'ADMIN'
+    else:
+        print(f"     ❌ FAILED! Expected 200, got {response.status_code}, Error: {response.text}")
+        return
+    
+    # --- Test Case 4: Test invalid role ---
+    print("   - Testing invalid role update...")
+    role_update_payload = {"role": "INVALID_ROLE"}
+    response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                            json=role_update_payload, headers=admin_headers)
+    if response.status_code == 400:
+        print("     ✅ Correctly rejected invalid role (400 Bad Request)")
+    else:
+        print(f"     ❌ FAILED! Expected 400, got {response.status_code}")
+    
+    # --- Test Case 5: Verify the updated user can now access admin endpoints ---
+    print("   - Testing that updated user now has admin privileges...")
+    # Login as the updated user to get fresh token with new role
+    updated_user_token = test_login_and_token_claims(user_creds)
+    if updated_user_token:
+        updated_headers = {'Authorization': f'Bearer {updated_user_token}'}
+        admin_test_response = requests.get(f"{BASE_URL}/users/", headers=updated_headers)
+        if admin_test_response.status_code == 200:
+            print("     ✅ Updated user can now access admin endpoints")
+        else:
+            print(f"     ❌ Updated user still cannot access admin endpoints: {admin_test_response.status_code}")
+    
+    print("   ✅ Role update functionality tests completed!")
+
+def test_role_update_edge_cases():
+    """Test edge cases for role updates."""
+    print("\n🧪 Testing Role Update Edge Cases...")
+    
+    # Create admin user
+    admin_creds = create_test_user(role=CustomUser.Role.ADMIN)
+    admin_token = test_login_and_token_claims(admin_creds)
+    
+    if not admin_token:
+        print("   ❌ Could not get admin token. Skipping edge case tests.")
+        return
+    
+    admin_headers = {'Authorization': f'Bearer {admin_token}'}
+    
+    # --- Test Case 1: Update non-existent user ---
+    print("   - Testing update of non-existent user...")
+    response = requests.patch(f"{BASE_URL}/users/99999/role/", 
+                            json={"role": "ADMIN"}, headers=admin_headers)
+    if response.status_code == 404:
+        print("     ✅ Correctly returned 404 for non-existent user")
+    else:
+        print(f"     ❌ Expected 404, got {response.status_code}")
+    
+    # --- Test Case 2: Missing role in payload ---
+    print("   - Testing update with missing role...")
+    # Get a valid user ID first
+    users_response = requests.get(f"{BASE_URL}/users/", headers=admin_headers)
+    if users_response.status_code == 200:
+        users_data = users_response.json()
+        results = users_data.get('results', users_data) if isinstance(users_data, dict) else users_data
+        if results:
+            user_id = results[0]['id']
+            response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                                    json={}, headers=admin_headers)  # Empty payload
+            if response.status_code == 400:
+                print("     ✅ Correctly rejected empty role payload")
+            else:
+                print(f"     ❌ Expected 400, got {response.status_code}")
+    
+    # --- Test Case 3: Test all valid roles ---
+    print("   - Testing all valid role assignments...")
+    valid_roles = ['USER', 'CRITIC', 'MODERATOR', 'ADMIN']
+    
+    # Create a test user for role cycling
+    test_user_creds = create_test_user(role=CustomUser.Role.USER)
+    users_response = requests.get(f"{BASE_URL}/users/", headers=admin_headers)
+    if users_response.status_code == 200:
+        users_data = users_response.json()
+        results = users_data.get('results', users_data) if isinstance(users_data, dict) else users_data
+        
+        target_user = None
+        for user in results:
+            if user['email'] == test_user_creds['email']:
+                target_user = user
+                break
+        
+        if target_user:
+            user_id = target_user['id']
+            for role in valid_roles:
+                response = requests.patch(f"{BASE_URL}/users/{user_id}/role/", 
+                                        json={"role": role}, headers=admin_headers)
+                if response.status_code == 200:
+                    print(f"     ✅ Successfully assigned role: {role}")
+                else:
+                    print(f"     ❌ Failed to assign role {role}: {response.status_code}")
+    
+    print("   ✅ Edge case tests completed!")
+
 def main():
     """Run all authentication and authorization tests."""
-    print("🚀 Starting Auth API Tests (including RBAC)...")
-    print("=" * 60)
+    print("🚀 Starting Enhanced Auth API Tests (including Role Updates)...")
+    print("=" * 70)
     
     try:
         user_credentials = test_successful_registration()
         if user_credentials:
             test_login_and_token_claims(user_credentials)
         test_protected_endpoint_access()
+        test_role_update_functionality()
+        test_role_update_edge_cases()
         
-        print("\n" + "=" * 60)
+        print("\n" + "=" * 70)
         print("🎉 All authentication and authorization tests completed!")
         
     except requests.exceptions.ConnectionError:
         print("\n❌ Could not connect to the API. Make sure your server is running on http://localhost:8000")
     except Exception as e:
         print(f"\n❌ An unexpected error occurred: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
+
