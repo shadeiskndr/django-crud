@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, Tuple
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction, models, connection, models as dj_models
 
-from backend_api.models import (
+from movies.models import (
     Genre,
     SpokenLanguage,
     OriginCountry,

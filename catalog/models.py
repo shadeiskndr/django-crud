@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from users.models import CustomUser
-from backend_api.models import Movie
+from movies.models import Movie
 
 
 class UserMovieCatalog(models.Model):

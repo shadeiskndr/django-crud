@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from django.db import IntegrityError
 from .models import UserMovieCatalog, MovieList, MovieListItem
-from backend_api.serializers import MovieListSerializer
-from backend_api.models import Movie
+from movies.serializers import MovieListSerializer
+from movies.models import Movie
 
 
 class UserMovieCatalogSerializer(serializers.ModelSerializer):

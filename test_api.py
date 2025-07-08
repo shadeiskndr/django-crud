@@ -8,7 +8,7 @@ import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'movielogd.settings')
 django.setup()
 from users.models import CustomUser
-from backend_api.models import Genre # <-- Import Genre model
+from movies.models import Genre # <-- Import Genre model
 # --- End Django Setup ---
 
 # Base URLs

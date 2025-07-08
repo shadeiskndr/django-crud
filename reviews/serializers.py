@@ -2,9 +2,9 @@ from rest_framework import serializers
 from django.utils import timezone
 from django.db import IntegrityError
 from .models import Review, ReviewVote, ReviewReport
-from backend_api.serializers import MovieListSerializer
+from movies.serializers import MovieListSerializer
 from users.serializers import UserSerializer
-from backend_api.models import Movie
+from movies.models import Movie
 
 
 class ReviewSerializer(serializers.ModelSerializer):

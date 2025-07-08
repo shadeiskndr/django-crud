@@ -410,7 +410,7 @@ The application will:
 
 ### Core Tables
 - **users_customuser**: User accounts with roles
-- **backend_api_movie**: Main movie data (scalar fields only)
+- **movies_movie**: Main movie data (scalar fields only)
 - **catalog_usermoviewcatalog**: Personal movie tracking
 - **catalog_movielist**: Custom user-created movie lists
 - **catalog_movielistitem**: Movies in custom lists (with ordering)
@@ -419,18 +419,18 @@ The application will:
 - **reviews_reviewreport**: Community reporting of inappropriate content
 
 ### Lookup Tables
-- **backend_api_genre**: Genre lookup table
-- **backend_api_spokenlanguage**: Language lookup table
-- **backend_api_productioncountry**: Country lookup table
-- **backend_api_productioncompany**: Production company lookup table
-- **backend_api_video**: Video/trailer lookup table
+- **movies_genre**: Genre lookup table
+- **movies_spokenlanguage**: Language lookup table
+- **movies_productioncountry**: Country lookup table
+- **movies_productioncompany**: Production company lookup table
+- **movies_video**: Video/trailer lookup table
 
 ### Relationship Tables
-- **backend_api_moviegenre**: Movie ↔ Genre relationships
-- **backend_api_moviespokenlanguage**: Movie ↔ Language relationships
-- **backend_api_movieproductioncountry**: Movie ↔ Country relationships
-- **backend_api_movieproductioncompany**: Movie ↔ Company relationships
-- **backend_api_movievideo**: Movie ↔ Video relationships
+- **movies_moviegenre**: Movie ↔ Genre relationships
+- **movies_moviespokenlanguage**: Movie ↔ Language relationships
+- **movies_movieproductioncountry**: Movie ↔ Country relationships
+- **movies_movieproductioncompany**: Movie ↔ Company relationships
+- **movies_movievideo**: Movie ↔ Video relationships
 
 ## Development
 

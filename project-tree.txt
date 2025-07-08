@@ -2,44 +2,15 @@ django-crud
 ├─ .dockerignore
 ├─ Dockerfile
 ├─ README.md
-├─ backend_api
-│  ├─ __init__.py
-│  ├─ admin.py
-│  ├─ apps.py
-│  ├─ management
-│  │  └─ commands
-│  │     ├─ __init__.py
-│  │     └─ import_movies_from_sqlite.py
-│  ├─ migrations
-│  │  ├─ 0001_initial.py
-│  │  ├─ 0002_genre_origincountry_productioncompany_and_more.py
-│  │  ├─ 0003_alter_productioncompany_logo_path_and_more.py
-│  │  ├─ 0004_alter_movie_adult_alter_movie_backdrop_path_and_more.py
-│  │  ├─ 0005_alter_movie_imdb_id.py
-│  │  ├─ 0006_remove_movie_adult.py
-│  │  └─ __init__.py
-│  ├─ models.py
-│  ├─ permissions.py
-│  ├─ serializers.py
-│  ├─ tests.py
-│  ├─ urls.py
-│  └─ views.py
 ├─ catalog
 │  ├─ __init__.py
-│  ├─ admin.py
 │  ├─ apps.py
-│  ├─ migrations
-│  │  ├─ 0001_initial.py
-│  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ permissions.py
 │  ├─ serializers.py
-│  ├─ tests.py
 │  ├─ urls.py
 │  └─ views.py
 ├─ docker-compose.yml
-├─ json_to_sqlite_doc.txt
-├─ json_to_sqlite_filtered.py
 ├─ manage.py
 ├─ movielogd
 │  ├─ __init__.py
@@ -47,20 +18,26 @@ django-crud
 │  ├─ settings.py
 │  ├─ urls.py
 │  └─ wsgi.py
+├─ movies
+│  ├─ __init__.py
+│  ├─ apps.py
+│  ├─ management
+│  │  └─ commands
+│  │     ├─ __init__.py
+│  │     └─ import_movies_from_sqlite.py
+│  ├─ models.py
+│  ├─ permissions.py
+│  ├─ serializers.py
+│  ├─ urls.py
+│  └─ views.py
 ├─ project-tree.txt
 ├─ requirements.txt
 ├─ reviews
 │  ├─ __init__.py
-│  ├─ admin.py
 │  ├─ apps.py
-│  ├─ migrations
-│  │  ├─ 0001_initial.py
-│  │  ├─ 0002_alter_reviewreport_options.py
-│  │  └─ __init__.py
 │  ├─ models.py
 │  ├─ permissions.py
 │  ├─ serializers.py
-│  ├─ tests.py
 │  ├─ urls.py
 │  └─ views.py
 ├─ seed
@@ -71,15 +48,9 @@ django-crud
 ├─ test_reviews_api.py
 └─ users
    ├─ __init__.py
-   ├─ admin.py
    ├─ apps.py
-   ├─ migrations
-   │  ├─ 0001_initial.py
-   │  ├─ 0002_customuser_role.py
-   │  └─ __init__.py
    ├─ models.py
    ├─ permissions.py
    ├─ serializers.py
-   ├─ tests.py
    ├─ urls.py
    └─ views.py

@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
 
     # Local apps
-    'backend_api',
+    'movies',
     'users',
     'catalog',
     'reviews',
