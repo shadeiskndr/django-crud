@@ -138,6 +138,4 @@ GitHub.sublime-settings
 .history
 
 /seed/movies.db
-
-/migrations/__pycache__/
-/migrations/*.pyc
+*/migrations/
