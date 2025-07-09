@@ -6,6 +6,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import RegisterSerializer, UserSerializer
 from .models import CustomUser
 from .permissions import IsAdmin
+from .docs import (
+    JWT_TOKEN_OBTAIN_SCHEMA,
+    USER_REGISTRATION_SCHEMA,
+    USER_LIST_SCHEMA,
+    USER_ROLE_UPDATE_SCHEMA
+)
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -19,9 +25,11 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         return token
 
+@JWT_TOKEN_OBTAIN_SCHEMA
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
 
+@USER_REGISTRATION_SCHEMA
 class RegisterView(generics.CreateAPIView):
     """
     API endpoint for user registration.
@@ -40,6 +48,7 @@ class RegisterView(generics.CreateAPIView):
             "message": "User created successfully. You can now log in."
         }, status=status.HTTP_201_CREATED)
 
+@USER_LIST_SCHEMA
 class UserListView(generics.ListAPIView):
     """
     API endpoint that lists all users.
@@ -49,6 +58,7 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, IsAdmin] # Enforce admin role
 
+@USER_ROLE_UPDATE_SCHEMA
 class UserRoleUpdateView(generics.UpdateAPIView):
     """
     API endpoint for admins to update user roles.

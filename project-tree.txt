@@ -5,6 +5,7 @@ django-crud
 ├─ catalog
 │  ├─ __init__.py
 │  ├─ apps.py
+│  ├─ docs.py
 │  ├─ models.py
 │  ├─ permissions.py
 │  ├─ serializers.py
@@ -21,6 +22,7 @@ django-crud
 ├─ movies
 │  ├─ __init__.py
 │  ├─ apps.py
+│  ├─ docs.py
 │  ├─ management
 │  │  └─ commands
 │  │     ├─ __init__.py
@@ -35,6 +37,7 @@ django-crud
 ├─ reviews
 │  ├─ __init__.py
 │  ├─ apps.py
+│  ├─ docs.py
 │  ├─ models.py
 │  ├─ permissions.py
 │  ├─ serializers.py
@@ -42,13 +45,14 @@ django-crud
 │  └─ views.py
 ├─ seed
 │  └─ movies.db
-├─ test_api.py
-├─ test_auth_api.py
 ├─ test_catalog_api.py
+├─ test_movies_api.py
 ├─ test_reviews_api.py
+├─ test_users_api.py
 └─ users
    ├─ __init__.py
    ├─ apps.py
+   ├─ docs.py
    ├─ models.py
    ├─ permissions.py
    ├─ serializers.py

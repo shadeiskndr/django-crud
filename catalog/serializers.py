@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.db import IntegrityError
-from .models import UserMovieCatalog, MovieList, MovieListItem
+from drf_spectacular.utils import extend_schema_field
+from .models import UserMovieCollection, UserMovieCollectionItem, UserMovieCatalog
 from movies.serializers import MovieListSerializer
 from movies.models import Movie
 
@@ -43,27 +44,27 @@ class CatalogActionSerializer(serializers.Serializer):
         return value
 
 
-class MovieListItemSerializer(serializers.ModelSerializer):
+class UserMovieCollectionItemSerializer(serializers.ModelSerializer):
     movie = MovieListSerializer(read_only=True)
     
     class Meta:
-        model = MovieListItem
+        model = UserMovieCollectionItem
         fields = ['movie', 'added_at', 'order']
 
-
-class MovieListSerializer(serializers.ModelSerializer):
-    movies = MovieListItemSerializer(source='movielistitem_set', many=True, read_only=True)
+class UserMovieCollectionSerializer(serializers.ModelSerializer):
+    movies = UserMovieCollectionItemSerializer(source='usermoviecollectionitem_set', many=True, read_only=True)
     movie_count = serializers.SerializerMethodField()
     owner = serializers.StringRelatedField(source='user', read_only=True)
     
     class Meta:
-        model = MovieList
+        model = UserMovieCollection
         fields = [
             'id', 'name', 'description', 'is_public', 'created_at', 
             'updated_at', 'movies', 'movie_count', 'owner'
         ]
         read_only_fields = ['created_at', 'updated_at']
     
+    @extend_schema_field(serializers.IntegerField)
     def get_movie_count(self, obj):
         return obj.movies.count()
     
@@ -72,10 +73,10 @@ class MovieListSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class MovieListCreateSerializer(serializers.ModelSerializer):
-    """Simplified serializer for creating lists"""
+class UserMovieCollectionCreateSerializer(serializers.ModelSerializer):
+    """Simplified serializer for creating collections"""
     class Meta:
-        model = MovieList
+        model = UserMovieCollection
         fields = ['id', 'name', 'description', 'is_public']
         read_only_fields = ['id']
     
@@ -85,19 +86,19 @@ class MovieListCreateSerializer(serializers.ModelSerializer):
             return super().create(validated_data)
         except IntegrityError:
             raise serializers.ValidationError({
-                'name': 'A list with this name already exists.'
+                'name': 'A collection with this name already exists.'
             })
     
     def validate_name(self, value):
         """Check for duplicate names for the current user"""
         user = self.context['request'].user
-        if MovieList.objects.filter(user=user, name=value).exists():
-            raise serializers.ValidationError('A list with this name already exists.')
+        if UserMovieCollection.objects.filter(user=user, name=value).exists():
+            raise serializers.ValidationError('A collection with this name already exists.')
         return value
 
 
-class AddToListSerializer(serializers.Serializer):
-    """Serializer for adding movies to lists"""
+class AddToCollectionSerializer(serializers.Serializer):
+    """Serializer for adding movies to collections"""
     movie_id = serializers.IntegerField()
     
     def validate_movie_id(self, value):

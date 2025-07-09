@@ -23,6 +23,7 @@ from .permissions import (
     IsOwnerOrModerator
 )
 from users.models import CustomUser
+from .docs import REVIEW_VIEWSET_SCHEMA, REVIEW_MODERATION_SCHEMA, REVIEW_REPORT_SCHEMA, REVIEW_VOTE_SCHEMA
 
 
 class ReviewPagination(PageNumberPagination):
@@ -30,7 +31,7 @@ class ReviewPagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
-
+@REVIEW_VIEWSET_SCHEMA
 class ReviewViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing movie reviews.
@@ -163,7 +164,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer = ReviewSerializer(reviews, many=True, context={'request': request})
         return Response(serializer.data)
 
-
+@REVIEW_MODERATION_SCHEMA
 class ReviewModerationViewSet(viewsets.ModelViewSet):
     """ViewSet for review moderation (moderators/admins only)"""
     serializer_class = ModerationSerializer
@@ -228,7 +229,7 @@ class ReviewModerationViewSet(viewsets.ModelViewSet):
         serializer = ReviewSerializer(review, context={'request': request})
         return Response(serializer.data)
 
-
+@REVIEW_VOTE_SCHEMA
 class ReviewVoteViewSet(viewsets.ModelViewSet):
     """ViewSet for voting on reviews"""
     serializer_class = ReviewVoteSerializer
@@ -236,12 +237,14 @@ class ReviewVoteViewSet(viewsets.ModelViewSet):
     pagination_class = ReviewPagination
     
     def get_queryset(self):
+        if not hasattr(self, 'request') or not self.request.user.is_authenticated:
+            return ReviewVote.objects.none()
         return ReviewVote.objects.select_related('user', 'review').filter(user=self.request.user)
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-
+@REVIEW_REPORT_SCHEMA
 class ReviewReportViewSet(viewsets.ModelViewSet):
     """ViewSet for reporting reviews"""
     serializer_class = ReviewReportSerializer
@@ -249,6 +252,8 @@ class ReviewReportViewSet(viewsets.ModelViewSet):
     pagination_class = ReviewPagination
     
     def get_queryset(self):
+        if not hasattr(self, 'request') or not self.request.user.is_authenticated:
+            return ReviewReport.objects.none()
         if self.request.user.role in [CustomUser.Role.MODERATOR, CustomUser.Role.ADMIN]:
             # Moderators can see all reports
             return ReviewReport.objects.select_related('user', 'review', 'resolved_by')
@@ -257,7 +262,10 @@ class ReviewReportViewSet(viewsets.ModelViewSet):
             return ReviewReport.objects.filter(user=self.request.user)
     
     def get_serializer_class(self):
-        if self.action in ['resolve'] and self.request.user.role in [CustomUser.Role.MODERATOR, CustomUser.Role.ADMIN]:
+        if (self.action in ['resolve'] and 
+            hasattr(self, 'request') and 
+            self.request.user.is_authenticated and
+            self.request.user.role in [CustomUser.Role.MODERATOR, CustomUser.Role.ADMIN]):
             return ReportResolutionSerializer
         return ReviewReportSerializer
     

@@ -4,15 +4,16 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.db.models import Count, Avg, Q
-from .models import UserMovieCatalog, MovieList, MovieListItem
+from .models import UserMovieCatalog, UserMovieCollection, UserMovieCollectionItem
 from .serializers import (
     UserMovieCatalogSerializer, 
     CatalogActionSerializer,
-    MovieListSerializer,
-    MovieListCreateSerializer,
-    AddToListSerializer
+    UserMovieCollectionSerializer,
+    UserMovieCollectionCreateSerializer,
+    AddToCollectionSerializer
 )
 from .permissions import IsOwnerOrReadOnly, IsOwnerOrPublicReadOnly
+from .docs import CATALOG_ENTRIES_SCHEMA, MOVIE_COLLECTIONS_SCHEMA
 from rest_framework.pagination import PageNumberPagination
 
 class CatalogPagination(PageNumberPagination):
@@ -20,12 +21,15 @@ class CatalogPagination(PageNumberPagination):
     page_size_query_param = "page_size"
     max_page_size = 100
 
+@CATALOG_ENTRIES_SCHEMA
 class UserMovieCatalogViewSet(viewsets.ModelViewSet):
     serializer_class = UserMovieCatalogSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
     pagination_class = CatalogPagination
     
     def get_queryset(self):
+        if not hasattr(self, 'request') or not self.request.user.is_authenticated:
+            return UserMovieCatalog.objects.none()            
         return UserMovieCatalog.objects.filter(
             user=self.request.user
         ).select_related('movie').order_by('-added_at')
@@ -120,7 +124,7 @@ class UserMovieCatalogViewSet(viewsets.ModelViewSet):
     
     @action(detail=False, methods=['post'])
     def add_to_watchlist(self, request):
-        """Add a movie to want-to-watch list"""
+        """Add a movie to want-to-watch"""
         serializer = CatalogActionSerializer(data=request.data)
         if serializer.is_valid():
             movie_id = serializer.validated_data['movie_id']
@@ -195,35 +199,44 @@ class UserMovieCatalogViewSet(viewsets.ModelViewSet):
         
         return Response(stats)
 
-
-class MovieListViewSet(viewsets.ModelViewSet):
+@MOVIE_COLLECTIONS_SCHEMA
+class UserMovieCollectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsOwnerOrPublicReadOnly]
     pagination_class = CatalogPagination
     
     def get_queryset(self):
-        if self.action == 'list':
-            # Show user's own lists + public lists from others
-            return MovieList.objects.filter(
+        if not hasattr(self, 'request') or not self.request.user.is_authenticated:
+            return UserMovieCollection.objects.none()
+        if self.action == 'my_collections':  # This should match the action name
+            # Show only user's own collections
+            return UserMovieCollection.objects.filter(
+                user=self.request.user
+            ).select_related('user').prefetch_related('movies').annotate(
+                movie_count=Count('movies')
+            ).order_by('-updated_at')
+        elif self.action == 'list':
+            # For list view, show user's own collections + public collections from others
+            return UserMovieCollection.objects.filter(
                 Q(user=self.request.user) | Q(is_public=True)
             ).select_related('user').prefetch_related('movies').annotate(
                 movie_count=Count('movies')
             ).order_by('-updated_at')
         else:
-            # For detail views, show all lists (permissions will be checked)
-            return MovieList.objects.select_related('user').prefetch_related('movies')
+            # For detail views, show all collections (permissions will be checked)
+            return UserMovieCollection.objects.select_related('user').prefetch_related('movies')
     
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return MovieListCreateSerializer
-        return MovieListSerializer
+            return UserMovieCollectionCreateSerializer
+        return UserMovieCollectionSerializer
     
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
     
     @action(detail=False, methods=['get'])
-    def my_lists(self, request):
-        """Get only the current user's lists"""
-        queryset = MovieList.objects.filter(user=request.user).annotate(
+    def my_collections(self, request):
+        """Get only the current user's collections"""
+        queryset = UserMovieCollection.objects.filter(user=request.user).annotate(
             movie_count=Count('movies')
         ).order_by('-updated_at')
         
@@ -237,38 +250,38 @@ class MovieListViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def add_movie(self, request, pk=None):
-        """Add a movie to this list"""
-        movie_list = self.get_object()
-        serializer = AddToListSerializer(data=request.data)
+        """Add a movie to this collection"""
+        movie_collection = self.get_object()
+        serializer = AddToCollectionSerializer(data=request.data)
         
         if serializer.is_valid():
             movie_id = serializer.validated_data['movie_id']
             
-            # Check if movie is already in the list
-            if MovieListItem.objects.filter(movie_list=movie_list, movie_id=movie_id).exists():
+            # Check if movie is already in the collection
+            if UserMovieCollectionItem.objects.filter(movie_collection=movie_collection, movie_id=movie_id).exists():
                 return Response(
-                    {'error': 'Movie is already in this list'}, 
+                    {'error': 'Movie is already in this collection'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Add movie to list
-            MovieListItem.objects.create(
-                movie_list=movie_list,
+            # Add movie to collection
+            UserMovieCollectionItem.objects.create(
+                movie_collection=movie_collection,
                 movie_id=movie_id,
-                order=movie_list.movielistitem_set.count()
+                order=movie_collection.usermoviecollectionitem_set.count()
             )
             
-            # Update the list's updated_at timestamp
-            movie_list.save(update_fields=['updated_at'])
+            # Update the collection's updated_at timestamp
+            movie_collection.save(update_fields=['updated_at'])
             
-            return Response({'message': 'Movie added to list'}, status=status.HTTP_201_CREATED)
+            return Response({'message': 'Movie added to collection'}, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['delete'])
     def remove_movie(self, request, pk=None):
-        """Remove a movie from this list"""
-        movie_list = self.get_object()
+        """Remove a movie from this collection"""
+        movie_collection = self.get_object()
         movie_id = request.data.get('movie_id')
         
         if not movie_id:
@@ -277,18 +290,18 @@ class MovieListViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        deleted_count, _ = MovieListItem.objects.filter(
-            movie_list=movie_list,
+        deleted_count, _ = UserMovieCollectionItem.objects.filter(
+            movie_collection=movie_collection,
             movie_id=movie_id
         ).delete()
         
         if deleted_count > 0:
-            # Update the list's updated_at timestamp
-            movie_list.save(update_fields=['updated_at'])
+            # Update the collection's updated_at timestamp
+            movie_collection.save(update_fields=['updated_at'])
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
-                {'error': 'Movie not found in this list'}, 
+                {'error': 'Movie not found in this collection'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
 

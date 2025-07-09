@@ -28,6 +28,7 @@ from .serializers import (
 )
 
 from .permissions import IsAdminOrReadOnly
+from .docs import MOVIE_VIEWSET_SCHEMA, MOVIE_STATS_SCHEMA
 
 # ───────────────────  Pagination  ───────────────────
 class MoviePagination(PageNumberPagination):
@@ -37,6 +38,7 @@ class MoviePagination(PageNumberPagination):
 
 
 # ───────────────────  MovieViewSet  ───────────────────
+@MOVIE_VIEWSET_SCHEMA
 class MovieViewSet(viewsets.ModelViewSet):
     """
     A unified ViewSet for viewing and editing movies.
@@ -106,7 +108,7 @@ class MovieStatsAPIView(APIView):
     """
     Aggregated statistics over the movie catalogue.
     """
-
+    @MOVIE_STATS_SCHEMA
     def get(self, request):
         stats = Movie.objects.aggregate(
             total_movies=Count("id"),

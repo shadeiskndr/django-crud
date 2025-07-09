@@ -76,7 +76,7 @@ def setup_test_data():
         {
             'title': 'Test Movie 3',
             'original_title': 'Test Movie 3', 
-            'overview': 'Third test movie for list testing',
+            'overview': 'Third test movie for collection testing',
             'release_date': '2024-03-01',
             'vote_average': 9.2,
             'runtime': 140
@@ -199,93 +199,127 @@ def test_catalog_entries_crud(user_token, movie_ids):
     
     return True
 
-def test_movie_lists_crud(user_token, movie_ids):
-    """Test CRUD operations for movie lists."""
-    print("\n🎬 Testing Movie Lists CRUD Operations...")
+def test_movie_collections_crud(user_token, movie_ids):
+    """Test CRUD operations for movie collections."""
+    print("\n🎬 Testing Movie Collections CRUD Operations...")
     
     headers = {'Authorization': f'Bearer {user_token}'}
     
-    # Test 1: Create a movie list
-    print("   - Testing create movie list...")
-    list_data = {
+    # Test 1: Create a movie collection
+    print("   - Testing create movie collection...")
+    collection_data = {
         "name": "My Favorite Action Movies",
         "description": "A collection of the best action movies I've seen",
         "is_public": True
     }
-    response = requests.post(f"{CATALOG_BASE_URL}/lists/", json=list_data, headers=headers)
+    response = requests.post(f"{CATALOG_BASE_URL}/collections/", json=collection_data, headers=headers)
     if response.status_code == 201:
-        print("     ✅ Successfully created movie list")
-        movie_list = response.json()
-        list_id = movie_list['id']
+        print("     ✅ Successfully created movie collection")
+        movie_collection = response.json()
+        collection_id = movie_collection['id']
     else:
-        print(f"     ❌ Failed to create movie list: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to create movie collection: {response.status_code} - {response.text}")
         return False
     
-    # Test 2: Add movies to the list
-    print("   - Testing add movies to list...")
+    # Test 2: Add movies to the collection
+    print("   - Testing add movies to collection...")
     for i, movie_id in enumerate(movie_ids[:2]):  # Add first 2 movies
         add_data = {"movie_id": movie_id}
-        response = requests.post(f"{CATALOG_BASE_URL}/lists/{list_id}/add_movie/", json=add_data, headers=headers)
+        response = requests.post(f"{CATALOG_BASE_URL}/collections/{collection_id}/add_movie/", json=add_data, headers=headers)
         if response.status_code == 201:
-            print(f"     ✅ Successfully added movie {i+1} to list")
+            print(f"     ✅ Successfully added movie {i+1} to collection")
         else:
-            print(f"     ❌ Failed to add movie {i+1} to list: {response.status_code} - {response.text}")
+            print(f"     ❌ Failed to add movie {i+1} to collection: {response.status_code} - {response.text}")
     
-    # Test 3: Get the list with movies
-    print("   - Testing get list with movies...")
-    response = requests.get(f"{CATALOG_BASE_URL}/lists/{list_id}/", headers=headers)
+    # Test 3: Get the collection with movies
+    print("   - Testing get collection with movies...")
+    response = requests.get(f"{CATALOG_BASE_URL}/collections/{collection_id}/", headers=headers)
     if response.status_code == 200:
-        list_detail = response.json()
-        print(f"     ✅ Retrieved list with {list_detail.get('movie_count', 0)} movies")
+        collection_detail = response.json()
+        print(f"     ✅ Retrieved collection with {collection_detail.get('movie_count', 0)} movies")
     else:
-        print(f"     ❌ Failed to get list detail: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to get collection detail: {response.status_code} - {response.text}")
         return False
     
-    # Test 4: Get all lists
-    print("   - Testing get all accessible lists...")
-    response = requests.get(f"{CATALOG_BASE_URL}/lists/", headers=headers)
+    # Test 4: Get all collections
+    print("   - Testing get all accessible collections...")
+    response = requests.get(f"{CATALOG_BASE_URL}/collections/", headers=headers)
     if response.status_code == 200:
-        all_lists = response.json()
-        print(f"     ✅ Retrieved {len(all_lists.get('results', all_lists))} accessible lists")
+        all_collections = response.json()
+        print(f"     ✅ Retrieved {len(all_collections.get('results', all_collections))} accessible collections")
     else:
-        print(f"     ❌ Failed to get all lists: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to get all collections: {response.status_code} - {response.text}")
         return False
     
-    # Test 5: Get only user's lists
-    print("   - Testing get user's own lists...")
-    response = requests.get(f"{CATALOG_BASE_URL}/lists/my_lists/", headers=headers)
+    # Test 5: Get only user's collections
+    print("   - Testing get user's own collections...")
+    response = requests.get(f"{CATALOG_BASE_URL}/collections/my_collections/", headers=headers)
     if response.status_code == 200:
-        my_lists = response.json()
-        print(f"     ✅ Retrieved {len(my_lists.get('results', my_lists))} user's own lists")
+        my_collections = response.json()
+        print(f"     ✅ Retrieved {len(my_collections.get('results', my_collections))} user's own collections")
     else:
-        print(f"     ❌ Failed to get user's lists: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to get user's collections: {response.status_code} - {response.text}")
         return False
     
-    # Test 6: Remove a movie from the list
-    print("   - Testing remove movie from list...")
+    # Test 6: Verify the difference between list and my_collections endpoints
+    print("   - Testing difference between list and my_collections endpoints...")
+    
+    # Create another user and a public collection
+    other_user_creds = create_test_user(role=CustomUser.Role.USER)
+    other_user_token = get_auth_token(other_user_creds)
+    other_headers = {'Authorization': f'Bearer {other_user_token}'}
+    
+    # Other user creates a public collection
+    other_collection_data = {
+        "name": "Other User's Public Collection",
+        "description": "This should appear in list but not in my_collections",
+        "is_public": True
+    }
+    other_response = requests.post(f"{CATALOG_BASE_URL}/collections/", json=other_collection_data, headers=other_headers)
+    
+    if other_response.status_code == 201:
+        # Now test the difference
+        list_response = requests.get(f"{CATALOG_BASE_URL}/collections/", headers=headers)
+        my_collections_response = requests.get(f"{CATALOG_BASE_URL}/collections/my_collections/", headers=headers)
+        
+        if list_response.status_code == 200 and my_collections_response.status_code == 200:
+            list_count = len(list_response.json().get('results', list_response.json()))
+            my_count = len(my_collections_response.json().get('results', my_collections_response.json()))
+            
+            if list_count > my_count:
+                print(f"     ✅ List endpoint shows more collections ({list_count}) than my_collections ({my_count}) - includes public collections from others")
+            else:
+                print(f"     ⚠️  Expected list endpoint to show more collections than my_collections")
+        else:
+            print(f"     ❌ Failed to compare endpoints: list={list_response.status_code}, my_collections={my_collections_response.status_code}")
+    else:
+        print(f"     ⚠️  Could not create other user's collection for comparison: {other_response.status_code}")
+    
+    # Test 7: Remove a movie from the collection
+    print("   - Testing remove movie from collection...")
     remove_data = {"movie_id": movie_ids[0]}
-    response = requests.delete(f"{CATALOG_BASE_URL}/lists/{list_id}/remove_movie/", json=remove_data, headers=headers)
+    response = requests.delete(f"{CATALOG_BASE_URL}/collections/{collection_id}/remove_movie/", json=remove_data, headers=headers)
     if response.status_code == 204:
-        print("     ✅ Successfully removed movie from list")
+        print("     ✅ Successfully removed movie from collection")
     else:
-        print(f"     ❌ Failed to remove movie from list: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to remove movie from collection: {response.status_code} - {response.text}")
         return False
     
-    # Test 7: Update the list
-    print("   - Testing update movie list...")
+    # Test 8: Update the collection
+    print("   - Testing update movie collection...")
     update_data = {
-        "name": "My Updated Action Movies List",
+        "name": "My Updated Action Movies Collection",
         "description": "Updated description for my action movies",
         "is_public": False
     }
-    response = requests.patch(f"{CATALOG_BASE_URL}/lists/{list_id}/", json=update_data, headers=headers)
+    response = requests.patch(f"{CATALOG_BASE_URL}/collections/{collection_id}/", json=update_data, headers=headers)
     if response.status_code == 200:
-        print("     ✅ Successfully updated movie list")
+        print("     ✅ Successfully updated movie collection")
     else:
-        print(f"     ❌ Failed to update movie list: {response.status_code} - {response.text}")
+        print(f"     ❌ Failed to update movie collection: {response.status_code} - {response.text}")
         return False
     
-    return list_id
+    return collection_id
 
 def test_permissions_and_access_control(movie_ids):
     """Test that permissions work correctly."""
@@ -329,70 +363,70 @@ def test_permissions_and_access_control(movie_ids):
         print(f"     ❌ Failed to get User 2's catalog entries: {response.status_code}")
         return False
     
-    # Test 3: User 1 creates a public movie list
-    print("   - Testing public vs private movie lists...")
-    public_list_data = {
-        "name": "User 1's Public List",
+    # Test 3: User 1 creates a public movie collection
+    print("   - Testing public vs private movie collections...")
+    public_collection_data = {
+        "name": "User 1's Public Collection",
         "description": "This should be visible to other users",
         "is_public": True
     }
-    response = requests.post(f"{CATALOG_BASE_URL}/lists/", json=public_list_data, headers=user1_headers)
+    response = requests.post(f"{CATALOG_BASE_URL}/collections/", json=public_collection_data, headers=user1_headers)
     if response.status_code == 201:
-        public_list = response.json()
-        public_list_id = public_list['id']
-        print("     ✅ User 1 successfully created public list")
+        public_collection = response.json()
+        public_collection_id = public_collection['id']
+        print("     ✅ User 1 successfully created public collection")
     else:
-        print(f"     ❌ User 1 failed to create public list: {response.text}")
+        print(f"     ❌ User 1 failed to create public collection: {response.text}")
         return False
     
-    # Test 4: User 1 creates a private movie list
-    private_list_data = {
-        "name": "User 1's Private List",
+    # Test 4: User 1 creates a private movie collection
+    private_collection_data = {
+        "name": "User 1's Private Collection",
         "description": "This should NOT be visible to other users",
         "is_public": False
     }
-    response = requests.post(f"{CATALOG_BASE_URL}/lists/", json=private_list_data, headers=user1_headers)
+    response = requests.post(f"{CATALOG_BASE_URL}/collections/", json=private_collection_data, headers=user1_headers)
     if response.status_code == 201:
-        private_list = response.json()
-        private_list_id = private_list['id']
-        print("     ✅ User 1 successfully created private list")
+        private_collection = response.json()
+        private_collection_id = private_collection['id']
+        print("     ✅ User 1 successfully created private collection")
     else:
-        print(f"     ❌ User 1 failed to create private list: {response.text}")
+        print(f"     ❌ User 1 failed to create private collection: {response.text}")
         return False
     
-    # Test 5: User 2 should see User 1's public list but not private list
-    response = requests.get(f"{CATALOG_BASE_URL}/lists/", headers=user2_headers)
+    # Test 5: User 2 should see User 1's public collection but not private collection
+    response = requests.get(f"{CATALOG_BASE_URL}/collections/", headers=user2_headers)
     if response.status_code == 200:
-        all_lists = response.json()
-        list_results = all_lists.get('results', all_lists)
+        all_collections = response.json()
+        collection_results = all_collections.get('results', all_collections)
         
-        # Check if User 2 can see the public list
-        public_list_visible = any(lst['id'] == public_list_id for lst in list_results)
-        private_list_visible = any(lst['id'] == private_list_id for lst in list_results)
+        # Check if User 2 can see the public collection
+        public_collection_visible = any(lst['id'] == public_collection_id for lst in collection_results)
+        private_collection_visible = any(lst['id'] == private_collection_id for lst in collection_results)
         
-        if public_list_visible and not private_list_visible:
-            print("     ✅ User 2 can see public list but not private list (permissions working)")
-        elif not public_list_visible:
-            print("     ❌ User 2 cannot see public list (should be visible)")
+        if public_collection_visible and not private_collection_visible:
+            print("     ✅ User 2 can see public collection but not private collection (permissions working)")
+        elif not public_collection_visible:
+            print("     ❌ User 2 cannot see public collection (should be visible)")
             return False
-        elif private_list_visible:
-            print("     ❌ User 2 can see private list (should be hidden)")
+        elif private_collection_visible:
+            print("     ❌ User 2 can see private collection (should be hidden)")
             return False
     else:
-        print(f"     ❌ Failed to get lists for User 2: {response.status_code}")
+        print(f"     ❌ Failed to get collections for User 2: {response.status_code}")
         return False
     
-    # Test 6: User 2 should not be able to modify User 1's lists
-    print("   - Testing list modification permissions...")
+    # Test 6: User 2 should not be able to modify User 1's collections
+    print("   - Testing collection modification permissions...")
     unauthorized_update = {
-        "name": "Hacked List Name",
-        "description": "User 2 trying to modify User 1's list"
+        "name": "Hacked Collection Name",
+        "description": "User 2 trying to modify User 1's collection"
     }
-    response = requests.patch(f"{CATALOG_BASE_URL}/lists/{public_list_id}/", json=unauthorized_update, headers=user2_headers)
+    response = requests.patch(f"{CATALOG_BASE_URL}/collections/{public_collection_id}/", json=unauthorized_update, headers=user2_headers)
     if response.status_code == 403:
-        print("     ✅ User 2 correctly denied permission to modify User 1's list")
+        print("     ✅ User 2 correctly denied permission to modify User 1's collection")
     else:
-        print(f"     ❌ User 2 was able to modify User 1's list (should be denied): {response.status_code}")
+        print(f"     ❌ User 2 was able to modify User 1's collection (should be denied): {response.status_code}")
         return False
     
     # Test 7: Test unauthenticated access
@@ -445,21 +479,21 @@ def test_error_handling(user_token):
         print(f"     ❌ Should have rejected invalid rating: {response.status_code}")
         return False
     
-    # Test 4: Try to create list with duplicate name
-    print("   - Testing duplicate list name...")
+    # Test 4: Try to create collection with duplicate name
+    print("   - Testing duplicate collection name...")
     unique_id = uuid.uuid4().hex[:8]  # Add this line
-    list_data = {
-        "name": f"Test List {unique_id}",  # Make name unique
-        "description": "First list", 
+    collection_data = {
+        "name": f"Test Collection {unique_id}",  # Make name unique
+        "description": "First collection", 
         "is_public": False
     }
-    response1 = requests.post(f"{CATALOG_BASE_URL}/lists/", json=list_data, headers=headers)
-    response2 = requests.post(f"{CATALOG_BASE_URL}/lists/", json=list_data, headers=headers)  # Same name
+    response1 = requests.post(f"{CATALOG_BASE_URL}/collections/", json=collection_data, headers=headers)
+    response2 = requests.post(f"{CATALOG_BASE_URL}/collections/", json=collection_data, headers=headers)  # Same name
     
     if response1.status_code == 201 and response2.status_code == 400:
-        print("     ✅ Correctly rejected duplicate list name")
+        print("     ✅ Correctly rejected duplicate collection name")
     else:
-        print(f"     ❌ Duplicate list handling failed: {response1.status_code}, {response2.status_code}")
+        print(f"     ❌ Duplicate collection handling failed: {response1.status_code}, {response2.status_code}")
         return False
     
     return True
@@ -498,26 +532,26 @@ def test_edge_cases(user_token, movie_ids):
         print(f"     ❌ Failed to change movie status: {response.status_code}")
         return False
     
-    # Test 3: Add same movie to list multiple times
-    print("   - Testing duplicate movie in list...")
-    list_data = {"name": "Edge Case List", "description": "Testing duplicates", "is_public": False}
-    list_response = requests.post(f"{CATALOG_BASE_URL}/lists/", json=list_data, headers=headers)
+    # Test 3: Add same movie to collection multiple times
+    print("   - Testing duplicate movie in collection...")
+    collection_data = {"name": "Edge Case Collection", "description": "Testing duplicates", "is_public": False}
+    collection_response = requests.post(f"{CATALOG_BASE_URL}/collections/", json=collection_data, headers=headers)
     
-    if list_response.status_code == 201:
-        list_id = list_response.json()['id']
+    if collection_response.status_code == 201:
+        collection_id = collection_response.json()['id']
         
         # Add movie twice
         add_data = {"movie_id": movie_ids[0]}
-        response1 = requests.post(f"{CATALOG_BASE_URL}/lists/{list_id}/add_movie/", json=add_data, headers=headers)
-        response2 = requests.post(f"{CATALOG_BASE_URL}/lists/{list_id}/add_movie/", json=add_data, headers=headers)
+        response1 = requests.post(f"{CATALOG_BASE_URL}/collections/{collection_id}/add_movie/", json=add_data, headers=headers)
+        response2 = requests.post(f"{CATALOG_BASE_URL}/collections/{collection_id}/add_movie/", json=add_data, headers=headers)
         
         if response1.status_code == 201 and response2.status_code == 400:
-            print("     ✅ Correctly prevented duplicate movie in list")
+            print("     ✅ Correctly prevented duplicate movie in collection")
         else:
-            print(f"     ❌ Duplicate movie in list handling failed: {response1.status_code}, {response2.status_code}")
+            print(f"     ❌ Duplicate movie in collection handling failed: {response1.status_code}, {response2.status_code}")
             return False
     else:
-        print(f"     ❌ Failed to create test list: {list_response.status_code}")
+        print(f"     ❌ Failed to create test collection: {collection_response.status_code}")
         return False
     
     # Test 4: Remove non-existent movie from catalog
@@ -556,7 +590,7 @@ def main():
         if test_catalog_entries_crud(user_token, movie_ids):
             tests_passed += 1
         
-        if test_movie_lists_crud(user_token, movie_ids):
+        if test_movie_collections_crud(user_token, movie_ids):
             tests_passed += 1
         
         if test_permissions_and_access_control(movie_ids):

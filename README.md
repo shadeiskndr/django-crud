@@ -40,12 +40,12 @@ Movielogd is a **movie database CRUD API** with **personal movie tracking and cu
 - **Personal statistics and analytics**
 - **Quick action endpoints** for common operations (bookmark, mark watched, etc.)
 
-### 3. Custom Movie Lists
-- **User-created themed lists** (e.g., "Best Sci-Fi", "Date Night Movies")
+### 3. Custom Movie Collections
+- **User-created themed collections** (e.g., "Best Sci-Fi", "Date Night Movies")
 - **Privacy controls**: Public lists for sharing, private lists for personal use
-- **Ordered list management** with custom sequencing
-- **List sharing and discovery** of public lists from other users
-- **Comprehensive list statistics** (movie counts, creation dates)
+- **Ordered collections management** with custom sequencing
+- **Collection sharing and discovery** of public lists from other users
+- **Comprehensive collection statistics** (movie counts, creation dates)
 
 ### 4. Movie Reviews & Community Features
 - **Full review system** with detailed movie reviews and ratings
@@ -118,15 +118,15 @@ Movielogd is a **movie database CRUD API** with **personal movie tracking and cu
 - `DELETE /api/catalog/entries/remove/` - Remove from catalog
 - `GET /api/catalog/entries/stats/` - Personal viewing statistics
 
-### Custom Movie Lists
-- `GET /api/catalog/lists/` - Browse public lists + user's own lists
-- `POST /api/catalog/lists/` - Create new movie list
-- `GET /api/catalog/lists/{id}/` - View specific list details
-- `PUT /api/catalog/lists/{id}/` - Update list (owner only)
-- `DELETE /api/catalog/lists/{id}/` - Delete list (owner only)
-- `GET /api/catalog/lists/my_lists/` - User's private lists view
-- `POST /api/catalog/lists/{id}/add_movie/` - Add movie to list
-- `DELETE /api/catalog/lists/{id}/remove_movie/` - Remove movie from list
+### Custom Movie Collections
+- `GET /api/catalog/collections/` - Browse public collections + user's own collections
+- `POST /api/catalog/collections/` - Create new movie collection
+- `GET /api/catalog/collections/{id}/` - View specific collection details
+- `PUT /api/catalog/collections/{id}/` - Update collection (owner only)
+- `DELETE /api/catalog/collections/{id}/` - Delete collection (owner only)
+- `GET /api/catalog/collections/my_collections/` - User's private collections view
+- `POST /api/catalog/collections/{id}/add_movie/` - Add movie to collection
+- `DELETE /api/catalog/collections/{id}/remove_movie/` - Remove movie from collection
 
 ### Movie Reviews & Community
 - `GET /api/reviews/reviews/` - List published reviews (public)
@@ -412,8 +412,8 @@ The application will:
 - **users_customuser**: User accounts with roles
 - **movies_movie**: Main movie data (scalar fields only)
 - **catalog_usermoviewcatalog**: Personal movie tracking
-- **catalog_movielist**: Custom user-created movie lists
-- **catalog_movielistitem**: Movies in custom lists (with ordering)
+- **catalog_moviecollection**: Custom user-created movie collections
+- **catalog_moviecollectionitem**: Movies in custom collections (with ordering)
 - **reviews_review**: Movie reviews with ratings and content
 - **reviews_reviewvote**: Community voting on review helpfulness
 - **reviews_reviewreport**: Community reporting of inappropriate content
@@ -445,7 +445,7 @@ python test_api.py
 # Test authentication and user management
 python test_auth_api.py
 
-# Test catalog and list functionality
+# Test catalog and collection functionality
 python test_catalog_api.py
 ```
 

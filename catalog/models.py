@@ -36,15 +36,15 @@ class UserMovieCatalog(models.Model):
         return f"{self.user.username} - {self.movie.title} ({self.status})"
 
 
-class MovieList(models.Model):
-    """Custom movie lists created by users"""
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='movie_lists')
+class UserMovieCollection(models.Model):
+    """Custom movie collection created by users"""
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='movie_collections')
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    movies = models.ManyToManyField(Movie, through='MovieListItem', related_name='custom_lists')
+    movies = models.ManyToManyField(Movie, through='UserMovieCollectionItem', related_name='custom_collections')
     
     class Meta:
         unique_together = ['user', 'name']
@@ -54,13 +54,13 @@ class MovieList(models.Model):
         return f"{self.user.username}'s {self.name}"
 
 
-class MovieListItem(models.Model):
-    """Through model for movies in custom lists"""
-    movie_list = models.ForeignKey(MovieList, on_delete=models.CASCADE)
+class UserMovieCollectionItem(models.Model):
+    """Through model for movies in custom collections"""
+    movie_collection = models.ForeignKey(UserMovieCollection, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
     order = models.PositiveIntegerField(default=0)
     
     class Meta:
-        unique_together = ['movie_list', 'movie']
+        unique_together = ['movie_collection', 'movie']
         ordering = ['order', 'added_at']

@@ -5,6 +5,8 @@ from .models import Review, ReviewVote, ReviewReport
 from movies.serializers import MovieListSerializer
 from users.serializers import UserSerializer
 from movies.models import Movie
+from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.types import OpenApiTypes
 
 
 class ReviewSerializer(serializers.ModelSerializer):
@@ -25,6 +27,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['user', 'published_at', 'helpful_count', 'reported_count']
     
+    @extend_schema_field(OpenApiTypes.STR)
     def get_user_vote(self, obj):
         """Get current user's vote on this review"""
         request = self.context.get('request')
@@ -33,6 +36,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             return vote.vote_type if vote else None
         return None
     
+    @extend_schema_field(OpenApiTypes.BOOL)
     def get_can_edit(self, obj):
         """Check if current user can edit this review"""
         request = self.context.get('request')
@@ -40,6 +44,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             return obj.user == request.user
         return False
     
+    @extend_schema_field(OpenApiTypes.BOOL)
     def get_can_moderate(self, obj):
         """Check if current user can moderate this review"""
         request = self.context.get('request')
