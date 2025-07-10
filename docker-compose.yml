@@ -12,6 +12,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - movielogd-network
+    restart: unless-stopped
     command: >
       sh -c "
         echo 'Waiting for PostgreSQL...' &&
@@ -30,11 +33,30 @@ services:
       - .env
     ports:
       - "${POSTGRES_PORT}:5432"
+    networks:
+      - movielogd-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
+
+  angular-web-ui:
+    build:
+      context: ./angular-web-ui
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - web
+    networks:
+      - movielogd-network
+    restart: unless-stopped
+
+networks:
+  movielogd-network:
+    driver: bridge
 
 volumes:
   postgres_data:
