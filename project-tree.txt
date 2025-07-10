@@ -13,7 +13,8 @@ django-crud
 │  │  ├─ angular-state-management-guide.md
 │  │  ├─ modern-angular-guide-by-angular-team.txt
 │  │  ├─ modern-angular.mdc
-│  │  └─ state-management-react-vs-angular.md
+│  │  ├─ state-management-react-vs-angular.md
+│  │  └─ styling-architecture.md
 │  ├─ nginx.conf
 │  ├─ ngm-dev-cli.json
 │  ├─ package-lock.json
@@ -28,74 +29,78 @@ django-crud
 │  │  │  ├─ app.component.html
 │  │  │  ├─ app.component.ts
 │  │  │  ├─ app.config.ts
-│  │  │  └─ ngm-dev-blocks
-│  │  │     ├─ components
-│  │  │     │  └─ breadcrumbs
-│  │  │     │     ├─ breadcrumbs.component.html
-│  │  │     │     ├─ breadcrumbs.component.ts
-│  │  │     │     └─ index.ts
-│  │  │     ├─ free-authentication
-│  │  │     │  └─ login-email-password
-│  │  │     │     ├─ login-email-password.component.html
-│  │  │     │     └─ login-email-password.component.ts
-│  │  │     ├─ free-badges
-│  │  │     │  └─ badge-1
-│  │  │     │     ├─ badge-1.component.html
-│  │  │     │     ├─ badge-1.component.scss
-│  │  │     │     └─ badge-1.component.ts
-│  │  │     ├─ free-dialogs
-│  │  │     │  └─ dialog-1
-│  │  │     │     ├─ dialog-1.component.html
-│  │  │     │     ├─ dialog-1.component.ts
-│  │  │     │     ├─ transfer-dialog.component.html
-│  │  │     │     └─ transfer-dialog.component.ts
-│  │  │     ├─ free-grid-lists
-│  │  │     │  └─ grid-list-1
-│  │  │     │     ├─ grid-list-1.component.html
-│  │  │     │     ├─ grid-list-1.component.ts
-│  │  │     │     └─ grid-list-1.model.ts
-│  │  │     ├─ free-lists
-│  │  │     │  ├─ onboarding-feed-1
-│  │  │     │  │  ├─ onboarding-feed-1.component.html
-│  │  │     │  │  └─ onboarding-feed-1.component.ts
-│  │  │     │  └─ simple-with-icons
-│  │  │     │     ├─ simple-with-icons.component.html
-│  │  │     │     └─ simple-with-icons.component.ts
-│  │  │     ├─ free-multi-column
-│  │  │     │  └─ full-width-three-column
-│  │  │     │     ├─ full-width-three-column.component.html
-│  │  │     │     ├─ full-width-three-column.component.scss
-│  │  │     │     └─ full-width-three-column.component.ts
-│  │  │     ├─ free-page-headings
-│  │  │     │  └─ page-heading-1
-│  │  │     │     ├─ page-heading-1.component.html
-│  │  │     │     └─ page-heading-1.component.ts
-│  │  │     ├─ free-page-shells
-│  │  │     │  └─ page-shell-1
-│  │  │     │     ├─ page-shell-1.component.html
-│  │  │     │     └─ page-shell-1.component.ts
-│  │  │     ├─ free-stacked-layouts
-│  │  │     │  └─ nav-with-page-header
-│  │  │     │     ├─ nav-with-page-header.component.html
-│  │  │     │     └─ nav-with-page-header.component.ts
-│  │  │     ├─ styles
-│  │  │     │  ├─ _base.scss
-│  │  │     │  ├─ _dialogs.scss
-│  │  │     │  ├─ _sizes.scss
-│  │  │     │  ├─ _tabs.scss
-│  │  │     │  ├─ ngm-dev-blocks-styles.scss
-│  │  │     │  ├─ themes
-│  │  │     │  │  ├─ _dark.scss
-│  │  │     │  │  └─ _warn.scss
-│  │  │     │  └─ vendors
-│  │  │     │     └─ _tailwind.css
-│  │  │     └─ utils
-│  │  │        ├─ functions
-│  │  │        │  ├─ class-names.ts
-│  │  │        │  ├─ index.ts
-│  │  │        │  └─ shuffle-array.ts
-│  │  │        └─ services
-│  │  │           └─ device.service.ts
+│  │  │  ├─ components
+│  │  │  │  └─ theme-toggle.component.ts
+│  │  │  ├─ ngm-dev-blocks
+│  │  │  │  ├─ components
+│  │  │  │  │  └─ breadcrumbs
+│  │  │  │  │     ├─ breadcrumbs.component.html
+│  │  │  │  │     ├─ breadcrumbs.component.ts
+│  │  │  │  │     └─ index.ts
+│  │  │  │  ├─ free-authentication
+│  │  │  │  │  └─ login-email-password
+│  │  │  │  │     ├─ login-email-password.component.html
+│  │  │  │  │     └─ login-email-password.component.ts
+│  │  │  │  ├─ free-badges
+│  │  │  │  │  └─ badge-1
+│  │  │  │  │     ├─ badge-1.component.html
+│  │  │  │  │     ├─ badge-1.component.scss
+│  │  │  │  │     └─ badge-1.component.ts
+│  │  │  │  ├─ free-dialogs
+│  │  │  │  │  └─ dialog-1
+│  │  │  │  │     ├─ dialog-1.component.html
+│  │  │  │  │     ├─ dialog-1.component.ts
+│  │  │  │  │     ├─ transfer-dialog.component.html
+│  │  │  │  │     └─ transfer-dialog.component.ts
+│  │  │  │  ├─ free-grid-lists
+│  │  │  │  │  └─ grid-list-1
+│  │  │  │  │     ├─ grid-list-1.component.html
+│  │  │  │  │     ├─ grid-list-1.component.ts
+│  │  │  │  │     └─ grid-list-1.model.ts
+│  │  │  │  ├─ free-lists
+│  │  │  │  │  ├─ onboarding-feed-1
+│  │  │  │  │  │  ├─ onboarding-feed-1.component.html
+│  │  │  │  │  │  └─ onboarding-feed-1.component.ts
+│  │  │  │  │  └─ simple-with-icons
+│  │  │  │  │     ├─ simple-with-icons.component.html
+│  │  │  │  │     └─ simple-with-icons.component.ts
+│  │  │  │  ├─ free-multi-column
+│  │  │  │  │  └─ full-width-three-column
+│  │  │  │  │     ├─ full-width-three-column.component.html
+│  │  │  │  │     ├─ full-width-three-column.component.scss
+│  │  │  │  │     └─ full-width-three-column.component.ts
+│  │  │  │  ├─ free-page-headings
+│  │  │  │  │  └─ page-heading-1
+│  │  │  │  │     ├─ page-heading-1.component.html
+│  │  │  │  │     └─ page-heading-1.component.ts
+│  │  │  │  ├─ free-page-shells
+│  │  │  │  │  └─ page-shell-1
+│  │  │  │  │     ├─ page-shell-1.component.html
+│  │  │  │  │     └─ page-shell-1.component.ts
+│  │  │  │  ├─ free-stacked-layouts
+│  │  │  │  │  └─ nav-with-page-header
+│  │  │  │  │     ├─ nav-with-page-header.component.html
+│  │  │  │  │     └─ nav-with-page-header.component.ts
+│  │  │  │  ├─ styles
+│  │  │  │  │  ├─ _base.scss
+│  │  │  │  │  ├─ _dialogs.scss
+│  │  │  │  │  ├─ _sizes.scss
+│  │  │  │  │  ├─ _tabs.scss
+│  │  │  │  │  ├─ ngm-dev-blocks-styles.scss
+│  │  │  │  │  ├─ themes
+│  │  │  │  │  │  ├─ _dark.scss
+│  │  │  │  │  │  └─ _warn.scss
+│  │  │  │  │  └─ vendors
+│  │  │  │  │     └─ _tailwind.css
+│  │  │  │  └─ utils
+│  │  │  │     ├─ functions
+│  │  │  │     │  ├─ class-names.ts
+│  │  │  │     │  ├─ index.ts
+│  │  │  │     │  └─ shuffle-array.ts
+│  │  │  │     └─ services
+│  │  │  │        └─ device.service.ts
+│  │  │  └─ services
+│  │  │     └─ theme.service.ts
 │  │  ├─ index.html
 │  │  ├─ main.ts
 │  │  ├─ styles.scss

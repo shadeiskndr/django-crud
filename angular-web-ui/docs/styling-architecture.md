@@ -589,9 +589,11 @@ this.themeMode.set(savedThemeMode || 'auto');
 #### Card Grid Layout
 ```html
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-  <mat-card *ngFor="let item of items">
-    <!-- Card content -->
-  </mat-card>
+  @for (item of items; track item.id) {
+    <mat-card>
+      <!-- Card content -->
+    </mat-card>
+  }
 </div>
 ```
 
@@ -650,9 +652,11 @@ this.themeMode.set(savedThemeMode || 'auto');
 </div>
 
 <div class="md:hidden space-y-4">
-  <mat-card *ngFor="let item of dataSource.data">
-    <!-- Card representation of table row -->
-  </mat-card>
+  @for (item of dataSource.data; track item.id) {
+    <mat-card>
+      <!-- Card representation of table row -->
+    </mat-card>
+  }
 </div>
 ```
 
@@ -716,6 +720,113 @@ export class DynamicComponent {
 .slide-in {
   animation: slideInFromTop 0.3s var(--mat-sys-motion-easing-standard);
 }
+```
+
+## Modern Angular Control Flow Updates
+
+### Replace `*ngFor` with `@for`
+
+#### Old Syntax (Deprecated)
+```html
+<mat-card *ngFor="let item of items">
+  <!-- Card content -->
+</mat-card>
+```
+
+#### New Syntax (Angular 17+)
+```html
+@for (item of items; track item.id) {
+  <mat-card>
+    <!-- Card content -->
+  </mat-card>
+}
+```
+
+### Other Control Flow Updates
+
+You should also consider updating other control flow patterns in your documentation:
+
+#### Conditional Rendering
+```html
+<!-- Old -->
+<div *ngIf="showContent">Content</div>
+
+<!-- New -->
+@if (showContent) {
+  <div>Content</div>
+}
+```
+
+#### Switch Statements
+```html
+<!-- Old -->
+<div [ngSwitch]="status">
+  <span *ngSwitchCase="'loading'">Loading...</span>
+  <span *ngSwitchCase="'error'">Error occurred</span>
+  <span *ngSwitchDefault>Content loaded</span>
+</div>
+
+<!-- New -->
+@switch (status) {
+  @case ('loading') {
+    <span>Loading...</span>
+  }
+  @case ('error') {
+    <span>Error occurred</span>
+  }
+  @default {
+    <span>Content loaded</span>
+  }
+}
+```
+
+### Benefits of New Control Flow
+
+```markdown
+## Modern Angular Control Flow (Angular 17+)
+
+### Benefits of New Syntax
+
+1. **Better Performance** - Built-in optimizations and smaller bundle size
+2. **Type Safety** - Better TypeScript integration and type checking
+3. **Readability** - More intuitive syntax similar to other programming languages
+4. **Developer Experience** - Better IDE support and error messages
+
+### Migration Guidelines
+
+When updating existing components:
+
+1. **Replace `*ngFor`** with `@for` and always include `track` for performance
+2. **Replace `*ngIf`** with `@if` for conditional rendering
+3. **Replace `[ngSwitch]`** with `@switch` for multiple conditions
+4. **Update imports** - Remove `CommonModule` imports if only used for structural directives
+
+### Example Migration
+
+```typescript
+// Before
+@Component({
+  imports: [CommonModule, MatCardModule],
+  template: `
+    <mat-card *ngFor="let item of items; trackBy: trackByFn">
+      <div *ngIf="item.visible">{{ item.name }}</div>
+    </mat-card>
+  `
+})
+
+// After
+@Component({
+  imports: [MatCardModule], // CommonModule no longer needed
+  template: `
+    @for (item of items; track item.id) {
+      <mat-card>
+        @if (item.visible) {
+          <div>{{ item.name }}</div>
+        }
+      </mat-card>
+    }
+  `
+})
 ```
 
 ## Testing Strategies
